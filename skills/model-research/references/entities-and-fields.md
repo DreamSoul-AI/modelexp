@@ -1,0 +1,18 @@
+# 实体与字段规则
+
+内部entity_id由role及明确身份字段生成。首版身份字段必须是text；可用identity_url=true提取唯一URL并归一化主机、fragment和尾斜线，保留有意义query。多个URL不猜选。模型配置要把版本/变体纳入身份；缺失时保留待处理行。
+
+source_id_column仅是来源别名，例如渠道ID。别名重新指向另一实体时阻止该项；使用resolve-identity明确确认后重新计划，操作仅更新本地别名审计，不能绕过云端唯一身份匹配。
+
+field_id固定远端字段，column/column_aliases关联CSV。policy为manual、ai、derived、readonly、unassigned。默认unassigned；公式等系统字段不会提交。只有policy=ai且证据和授权满足时写入。
+
+accept_upstream=true表示明确允许该字段把上游CSV视为结构化候选来源，不表示内容经过官方核验。prefer_upstream=true使CSV优先于旧研究候选，要求accept_upstream；人工镜像保护继续生效，原CSV未变时保留人工修订。bootstrap_empty允许无基线且线上为空文本、空数组或null时补值；不自动覆盖已有非空值。allow_clear默认关闭，CSV空串不自动清空线上。
+
+多选以选项名数组表示，优先匹配完整选项，再拆分逗号、顿号、分号和全角斜线；单选保留名称内部标点。value_aliases为明确同义映射，不模糊推断机构身份。实时schema补全CLI截断的选项。默认不新增选项，只有单选字段明确设置allow_new_options且allow_writes=true时，apply运行可追加CSV中新标签，每轮最多50项，保留原字段设置。日期使用带时区ISO或明确业务日。unknown不是0；不能把不同版本的成绩混排。成绩字段可配置requires_context，缺协议条件候选拒绝进入写入计划。评分重算和link字段迁移不由首版自动实现。
+
+官方地址列明确遵循“首个链接为主体，其后为源数据/镜像/论文”时，可配置identity_url_first=true；默认仍要求唯一URL，可结合identity_preferred_host优先选择唯一代码仓库。空白模板行不阻断其他完整实体新增。
+
+同一仓库与revision可能同时发布多个变体（例如9B/4B、T2V/I2V）；项目身份应加入明确变体键。当前试运行将模型名称作为组合身份中的变体区分项，同时保留来源URL和revision，不能只按名称匹配或只按仓库/修订合并。
+
+
+自动写回的初始规则：已有非空值且无成功同步基线时保留；bootstrap_empty仅允许补空，程序首次写入并核验后才建立可更新基线。人工修改与候选冲突继续暂缓。creation_guard_keys可声明名称等额外文本定位项；只用于阻止同名/别名或不完整来源造成的重复，不替代完整实体身份。Benchmark官方地址含仓库及镜像时可显式配置identity_preferred_host；仅存在一个匹配入口才采用，仍有多个候选则保留身份问题。

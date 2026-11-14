@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "business_date": "2026-11-13",
+  "complete": true,
+  "files": {
+    "models": {"name": "model_daily_2026-11-13.csv", "sha256": "REPLACE_ACTUAL_SHA256", "allow_empty": false},
+    "benchmarks": {"name": "benchmark_daily_2026-11-13.csv", "sha256": "REPLACE_ACTUAL_SHA256", "allow_empty": false}
+  }
+}

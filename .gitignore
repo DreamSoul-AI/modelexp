@@ -125,3 +125,13 @@ res/
 .DS_Store
 scripts/
 
+# Local agent skills and personal configuration
+.agents/skills/
+.codex/skills/
+USER.md
+project.local.yml
+
+# Ship this skill's executable sources and regression tests.
+!skills/model-research/scripts/
+!skills/model-research/tests/scripts/
+

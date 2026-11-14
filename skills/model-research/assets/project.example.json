@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "state_dir": "./research-state",
+  "allow_writes": false,
+  "allow_unconfirmed_input": false,
+  "backend": {
+    "kind": "lark",
+    "command": [
+      "lark-cli"
+    ],
+    "timeout_seconds": 60
+  },
+  "agent": {
+    "enabled": false,
+    "command": null,
+    "codex_state_dir": "./codex-state",
+    "timeout_seconds": 600,
+    "model_timeout_seconds": 400,
+    "max_entities_per_run": 3,
+    "workflow_version": 4
+  },
+  "roles": {
+    "models": {
+      "base_token": "REPLACE_BASE_TOKEN",
+      "table_id": "REPLACE_MODEL_TABLE_ID",
+      "identity": [
+        "source_url",
+        "revision",
+        "name"
+      ],
+      "allow_create": false,
+      "input": {
+        "kind": "drive",
+        "folder_token": "REPLACE_MODEL_FOLDER_TOKEN",
+        "filename": "model_daily_{date}.csv",
+        "required": true
+      },
+      "fields": {
+        "source_url": {
+          "field_id": "REPLACE_URL_FIELD_ID",
+          "column": "获取地址",
+          "type": "text",
+          "identity_url": true,
+          "policy": "manual"
+        },
+        "revision": {
+          "field_id": "REPLACE_REVISION_FIELD_ID",
+          "column": "版本",
+          "type": "text",
+          "policy": "manual"
+        },
+        "name": {
+          "field_id": "REPLACE_NAME_FIELD_ID",
+          "column": "模型名称",
+          "type": "text",
+          "policy": "manual"
+        },
+        "license": {
+          "field_id": "REPLACE_LICENSE_FIELD_ID",
+          "column": "开放与许可",
+          "type": "text",
+          "policy": "unassigned"
+        }
+      }
+    }
+  }
+}
