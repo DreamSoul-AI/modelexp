@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install a fixed local release and supervise independent CSV or Markdown research runs."""
+"""Install a fixed local release and supervise CSV synchronization and read-only validation runs."""
 import argparse
 from contextlib import contextmanager
 from datetime import datetime, time, timedelta
@@ -23,16 +23,6 @@ TZ = ZoneInfo('Asia/Shanghai')
 SKILL = Path(__file__).resolve().parents[1]
 
 
-def research_runtime(cfg):
-    if cfg.get('agent', {}).get('command'):
-        return 'configured'
-    if cfg.get('agent', {}).get('enabled') is False and all(
-            field.get('policy') != 'ai' or field.get('accept_upstream')
-            for spec in cfg['roles'].values() for field in spec['fields'].values()):
-        return 'not_required'
-    return 'unconfigured'
-
-
 @contextmanager
 def exclusive(path):
     with Path(path).open('a') as stream:
@@ -51,9 +41,9 @@ def install(root, config, at='15:00', retry_minutes=30, retry_until='18:00', mod
     cfg = load_config(config)
     if mode == 'plan' and cfg.get('allow_writes', False):
         raise ResearchError('this trial deployment requires allow_writes=false')
-    if mode == 'research' and cfg.get('allow_writes', False):
-        raise ResearchError('research deployment requires allow_writes=false')
-    if mode not in ('plan', 'apply', 'research') or mode == 'apply' and not cfg.get('allow_writes', False):
+    if mode == 'validate' and cfg.get('allow_writes', False):
+        raise ResearchError('validation deployment requires allow_writes=false')
+    if mode not in ('plan', 'apply', 'validate') or mode == 'apply' and not cfg.get('allow_writes', False):
         raise ResearchError('apply deployment requires allow_writes=true')
     time.fromisoformat(at)
     time.fromisoformat(retry_until)
@@ -127,8 +117,7 @@ def next_due(settings, previous=None, clock=None):
             return opening
         interval = settings['retry_minutes']
         result = previous.get('result', {})
-        research = result.get('research') or {}
-        if settings.get('continue_after_minutes') and ((research.get('processed', 0) > 0 and research.get('remaining', 0) > 0) or result.get('readiness') == 'observing'):
+        if settings.get('continue_after_minutes') and result.get('readiness') == 'observing':
             interval = settings['continue_after_minutes']
         due = finished + timedelta(minutes=interval)
         return due if due < closing else opening + timedelta(days=1)
@@ -141,39 +130,26 @@ def tick(root, business_date=None):
     cfg = load_config(settings['config'])
     if settings['mode'] == 'plan' and cfg.get('allow_writes', False):
         raise ResearchError('trial service refuses a write-enabled configuration')
-    if settings['mode'] == 'research' and cfg.get('allow_writes', False):
-        raise ResearchError('research service refuses a write-enabled configuration')
-    if settings['mode'] not in ('plan', 'apply', 'research') or settings['mode'] == 'apply' and not cfg.get('allow_writes', False):
+    if settings['mode'] == 'validate' and cfg.get('allow_writes', False):
+        raise ResearchError('validation service refuses a write-enabled configuration')
+    if settings['mode'] not in ('plan', 'apply', 'validate') or settings['mode'] == 'apply' and not cfg.get('allow_writes', False):
         raise ResearchError('deployment mode and write configuration disagree')
     business_date = business_date or datetime.now(TZ).date().isoformat()
     report = {'started_at': now(), 'business_date': business_date, 'mode': settings['mode'],
-              'source_sha256': settings['source_sha256'], 'research_runtime': research_runtime(cfg)}
+              'source_sha256': settings['source_sha256'], 'model_calls': False}
     with exclusive(root / 'tick.lock'):
         script = Path(settings['release']) / 'skills/model-research/scripts/research.py'
-        command = [settings['python'], str(script), 'research' if settings['mode'] == 'research' else 'run',
+        command = [settings['python'], str(script), 'validate' if settings['mode'] == 'validate' else 'run',
                    '--config', settings['config'], '--date', business_date]
-        if settings['mode'] != 'research':
+        if settings['mode'] != 'validate':
             command += ['--mode', settings['mode']]
         try:
-            timeout = max(240, cfg.get('agent', {}).get('timeout_seconds', 180) + 60)
+            timeout = max(240, cfg.get('worker_timeout_seconds', 600) + 60)
             result = run_process(command, timeout=timeout)
             report['exit_code'] = result.returncode
             if result.returncode in (0, 3):
                 report['result'] = json.loads(result.stdout)
                 report['status'] = report['result']['status']
-                if report['result'].get('batch_id') and report['research_runtime'] == 'unconfigured':
-                    from agent_runner import research_request
-                    from state import State
-                    state = State(cfg['_state'])
-                    try:
-                        with state.lock():
-                            batch = state.batch(report['result']['batch_id'])
-                            if batch['items']:
-                                report['research_request'] = str(research_request(cfg, state, batch))
-                                if report['status'] == 'planned':
-                                    report['status'] = 'waiting_research'
-                    finally:
-                        state.close()
             else:
                 report.update(status='error', reason='worker failed; inspect private worker result')
             private = root / 'worker-results' / (now().replace(':', '-') + '-' + str(os.getpid()) + '.json')
@@ -195,7 +171,7 @@ def status(root):
     live = process(root)
     return {'status': 'running' if live else 'stopped', 'process': live, 'mode': settings['mode'],
             'allow_writes': cfg.get('allow_writes', False), 'next_run': next_due(settings, previous).isoformat(),
-            'research_runtime': research_runtime(cfg),
+            'model_calls': False,
             'deployment': settings, 'last_run': previous}
 
 
@@ -232,8 +208,8 @@ def start(root):
     cfg = load_config(settings['config'])
     if settings['mode'] == 'plan' and cfg.get('allow_writes', False):
         raise ResearchError('trial service refuses a write-enabled configuration')
-    if settings['mode'] == 'research' and cfg.get('allow_writes', False):
-        raise ResearchError('research service refuses a write-enabled configuration')
+    if settings['mode'] == 'validate' and cfg.get('allow_writes', False):
+        raise ResearchError('validation service refuses a write-enabled configuration')
     if settings['mode'] == 'apply' and not cfg.get('allow_writes', False):
         raise ResearchError('apply deployment requires allow_writes=true')
     script = Path(settings['release']) / 'skills/model-research/scripts/service.py'
@@ -273,7 +249,7 @@ def main():
     install_parser.add_argument('--at', default='15:00')
     install_parser.add_argument('--retry-until', default='18:00')
     install_parser.add_argument('--retry-minutes', type=int, default=30)
-    install_parser.add_argument('--mode', choices=('plan', 'apply', 'research'), default='plan')
+    install_parser.add_argument('--mode', choices=('plan', 'apply', 'validate'), default='plan')
     install_parser.add_argument('--continue-after-minutes', type=int)
     for command in ('start', 'stop', 'status', 'daemon'):
         commands.add_parser(command)

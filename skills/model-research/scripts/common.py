@@ -149,17 +149,9 @@ def load_config(path):
             raise ResearchError('file backend data must be outside the checkout')
         cfg['backend']['path'] = str(target)
     settings = cfg.get('agent', {})
-    if 'enabled' in settings and not isinstance(settings['enabled'], bool):
-        raise ResearchError('agent.enabled must be a JSON boolean')
-    if 'include_previous_batches' in settings and not isinstance(settings['include_previous_batches'], bool):
-        raise ResearchError('agent.include_previous_batches must be a JSON boolean')
-    roles = settings.get('roles')
-    if roles is not None and (not isinstance(roles, list) or not roles or
-            any(not isinstance(role, str) or role not in cfg['roles'] for role in roles) or len(set(roles)) != len(roles)):
-        raise ResearchError('agent.roles must be a nonempty list of configured roles')
-    if settings.get('codex_state_dir'):
-        target = (path.parent / settings['codex_state_dir']).resolve()
-        if target.is_relative_to(checkout):
-            raise ResearchError('Codex private state must be outside the checkout')
-        settings['codex_state_dir'] = str(target)
+    if settings.get('command') or settings.get('enabled'):
+        raise ResearchError('AI generation and research queue were removed; use Grokbot and validate')
+    validation = cfg.get('validation', {})
+    if validation.get('baseline_state_dir'):
+        validation['baseline_state_dir'] = str((path.parent / validation['baseline_state_dir']).resolve())
     return cfg

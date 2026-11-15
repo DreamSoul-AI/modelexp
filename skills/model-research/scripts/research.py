@@ -15,7 +15,6 @@ from lark_adapter import LarkAdapter, adapter_for
 from ingest import ingest
 from evidence import dossier_path, import_candidates, prepare_dossiers, read_dossier, save_dossier
 from identity import identity, normalize
-import agent_runner
 import sync
 from dossiers import write_index
 
@@ -84,12 +83,12 @@ def adopt(cfg, state, backend, batch_id, entity_id, record_id):
 def parser():
     result = argparse.ArgumentParser(description=__doc__)
     subs = result.add_subparsers(dest='command', required=True)
-    for name in ('doctor', 'inspect', 'ingest', 'plan', 'apply', 'verify', 'resume', 'run', 'research', 'finalize-md', 'export-md', 'import-candidates', 'adopt', 'resolve-identity'):
+    for name in ('doctor', 'inspect', 'ingest', 'plan', 'apply', 'verify', 'resume', 'run', 'validate', 'finalize-md', 'export-md', 'import-candidates', 'adopt', 'resolve-identity'):
         sub = subs.add_parser(name)
         sub.add_argument('--config', required=True)
         if name == 'export-md':
             sub.add_argument('--output', required=True)
-        if name in ('ingest', 'run', 'research'):
+        if name in ('ingest', 'run', 'validate'):
             sub.add_argument('--date', required=True)
             sub.add_argument('--manifest')
         if name in ('plan', 'import-candidates', 'adopt'):
@@ -157,13 +156,20 @@ def main(argv=None):
                     path = Path(args.plan).resolve()
                 document = read_json(path)
                 return sync.apply(cfg, state, document, backend, verify_only=args.command == 'verify')
-            if args.command in ('ingest', 'run', 'research'):
-                if args.command == 'research' and cfg.get('allow_writes', False):
-                    raise ResearchError('independent research requires allow_writes=false')
-                batch = ingest(cfg, state, args.date, backend if isinstance(backend, LarkAdapter) else None, args.manifest)
-                if args.command == 'research':
-                    import research_pipeline
-                    return research_pipeline.execute(cfg, state, batch)
+            if args.command in ('ingest', 'run', 'validate'):
+                if args.command == 'validate' and cfg.get('allow_writes', False):
+                    raise ResearchError('validation requires allow_writes=false')
+                try:
+                    batch = ingest(cfg, state, args.date, backend if isinstance(backend, LarkAdapter) else None, args.manifest)
+                except ResearchError as exc:
+                    if args.command != 'validate':
+                        raise
+                    batch = {'business_date': args.date, 'status': 'waiting_input', 'readiness': 'invalid',
+                             'items': [], 'sources': [],
+                             'issues': [{'reason': 'invalid_input', 'detail': str(exc)}]}
+                if args.command == 'validate':
+                    import validation
+                    return validation.execute(cfg, state, batch, backend)
                 prepare_dossiers(state, batch)
                 write_index(state)
                 if args.command == 'ingest':
@@ -177,7 +183,6 @@ def main(argv=None):
                 candidate_result = import_candidates(cfg, state, batch, args.candidates)
                 if args.command == 'import-candidates':
                     return candidate_result
-            research = None
             reconciliation = []
             if args.command == 'run' and args.mode == 'apply':
                 for plan_id in state.pending_plans():
@@ -186,19 +191,6 @@ def main(argv=None):
                         reconciliation.append(sync.apply(cfg, state, old, backend, verify_only=True))
                     except ResearchError as exc:
                         reconciliation.append({'plan_id': plan_id, 'status': 'unresolved', 'reason': str(exc)})
-            if args.command == 'run' and batch['items'] and not args.candidates:
-                needs_agent = bool(cfg.get('agent', {}).get('command')) or cfg.get('agent', {}).get('enabled', False) or any(f.get('policy') == 'ai' and not f.get('accept_upstream', False)
-                                  for s in cfg['roles'].values() for f in s['fields'].values())
-                if needs_agent:
-                    try:
-                        research = agent_runner.execute(cfg, state, batch)
-                    except ResearchError as exc:
-                        remaining = 0
-                        for item in batch['items']:
-                            receipt = state.root / 'research' / 'jobs' / (agent_runner.work_id(cfg, item) + '.json')
-                            if not receipt.exists() or read_json(receipt).get('status') != 'researched':
-                                remaining += 1
-                        research = {'status': 'partial', 'processed': 0, 'remaining': remaining, 'failure': str(exc)}
             if args.command == 'run' and args.mode == 'apply' and cfg.get('allow_writes') and batch['status'] == 'ready' and (
                     batch['readiness'] in ('producer_confirmed', 'observed_stable') or cfg.get('allow_unconfirmed_input')):
                 for role, spec in cfg['roles'].items():
@@ -214,27 +206,22 @@ def main(argv=None):
                             names = [aliases.get(item['raw_fields'][key].strip(), item['raw_fields'][key].strip())
                                      for item in batch['items'] if item['role'] == role and item['raw_fields'].get(key, '').strip()]
                             backend.append_select_options(spec, rule['field_id'], names)
-            pending = [{'reason': 'research_pending', 'entities': research['remaining']}] if research and research.get('remaining') else []
-            if research and research.get('failure'):
-                pending.append({'reason': 'research_failed', 'detail': research['failure']})
-            if research and research['status'] == 'waiting_research':
-                pending.append({'reason': 'research_not_configured'})
-            document = sync.plan(cfg, state, batch, backend, research_issues=pending)
+            document = sync.plan(cfg, state, batch, backend)
             path = state.root / 'plans' / (document['plan_id'] + '.json')
             if args.command == 'run' and args.mode == 'apply':
                 if any(issue.get('blocking') for issue in document['issues']):
                     return {'status': 'waiting_input', 'batch_id': batch['batch_id'], 'plan_id': document['plan_id'],
                             'readiness': batch['readiness'],
                             'plan_path': str(path), 'operations': len(document['operations']),
-                            'issues': document['issues'], 'research': research, 'reconciliation': reconciliation}
+                            'issues': document['issues'], 'reconciliation': reconciliation}
                 report = sync.apply(cfg, state, document, backend)
-                report.update(research=research, reconciliation=reconciliation, plan_path=str(path))
+                report.update(reconciliation=reconciliation, plan_path=str(path))
                 state.save_run(report)
                 return report
-            return {'status': batch['status'] if batch['status'] != 'ready' else (research['status'] if research else 'planned'),
+            return {'status': batch['status'] if batch['status'] != 'ready' else 'planned',
                     'batch_id': batch['batch_id'], 'plan_id': document['plan_id'], 'plan_path': str(path),
                     'readiness': batch['readiness'],
-                    'operations': len(document['operations']), 'issues': document['issues'], 'research': research}
+                    'operations': len(document['operations']), 'issues': document['issues']}
     finally:
         state.close()
 
@@ -244,7 +231,7 @@ if __name__ == '__main__':
         result = main()
         print(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False))
         status = result.get('status')
-        sys.exit(3 if status in ('partial', 'waiting_input', 'waiting_research') else 0)
+        sys.exit(3 if status in ('partial', 'waiting_input') else 0)
     except (ResearchError, ValueError, KeyError, OSError) as exc:
         print(json.dumps({'ok': False, 'error': {'type': type(exc).__name__, 'message': str(exc)}}, ensure_ascii=False), file=sys.stderr)
         sys.exit(2)

@@ -114,6 +114,7 @@ class CsvSyncTests(Workspace):
     def test_csv_only_run_has_no_model_dependency(self):
         from research import main
         self.direct()
-        with patch('agent_runner.execute', side_effect=AssertionError('must not research CSV again')):
-            result = main(['run', '--config', str(self.config_path), '--date', '2026-11-13', '--mode', 'apply'])
+        result = main(['run', '--config', str(self.config_path), '--date', '2026-11-13', '--mode', 'apply'])
+        self.assertFalse((self.state.root / 'requests').exists())
+        self.assertFalse((self.state.root / 'research').exists())
         self.assertEqual(result['counts'], {'verified': 2})

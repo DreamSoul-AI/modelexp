@@ -4,7 +4,7 @@
 
 原仓库是 RPipe 风格的图像分类实验流水线，源码位于 `src/`。用户在 `gyd` 分支开发 Model调研自动化，新增能力与现有训练流程分开组织。
 
-当前已实现skills/model-research/统筹skill与标准库CLI；当前日常路径直接采用Grokbot成品CSV，统一列映射、选项及URL格式后按表批量同步并回读，不再重复调研。Codex公开来源阅读与MD正文使用独立research服务，和CSV进程、状态目录及锁分开运行。长期无人值守、主机重启恢复仍需验收。
+当前已实现 skills/model-research/ 标准库 CLI：Grokbot 成品 CSV 直接同步飞书，独立 validate 服务检查字段规则与 CSV/线上记录一致性。按用户2026-11-16最新要求，Markdown交给Grokbot，Codex正文生成和研究队列已移除；现有报告打包导出、历史状态离线保留。校验不调用模型、不写飞书，不把一致性检查当作事实核实。
 
 ## 项目规则
 
@@ -59,10 +59,12 @@
 
 ## 当前双任务运行
 
-2026-11-15已恢复独立AI研究服务：CSV仍在/workspace/services/model-research，AI在/workspace/services/model-research-ai。AI使用research模式、独立state_dir、allow_writes=false，只写证据和MD，不调用表格plan/apply；CSV直接同步保持原设置。两项每日12:00启动，CSV重试至18:00，AI研究队列独立接续至23:59，旧正常日报的未完成项跨日期保留。研究正文以独立AI目录state/dossiers为准，CSV目录的输入MD不等于研究成果。
+CSV 同步与只读校验分别使用独立 state、锁和固定版本，每天北京时间12:00启动，18:00前按规则检查。同步保留已授权自动写回；校验通过 validation.baseline_state_dir 只读参考同步基线，区分人工修改与错误，不自动修表。无当日CSV对照的历史行不算漏项。source_links/backfill 保持禁用。
 
-恢复实例时在现有授权范围分别核对两项manage status/start；不得把Agent关闭的CSV服务当成全部自动化。启动说明已保存到环境草稿，尚未发布；这不是平台级唤醒，暂停期间准点运行仍未解决。
+旧 AI 正文服务停用并屏蔽，research/jobs 不再接续。保留历史正文、证据、人工笔记和凭据的私有归档；不把这些当成当前活动任务。新配置禁止 agent.command 和 enabled=true，避免误启动模型调用。
 
-## 定稿与服务器移交
+## Markdown 与服务器交接
 
-版本0.6已提供finalize-md和export-md。Git研究报告位于reports/model-research，只含已生成正文和来源；原CSV、私有配置、SQLite、认证及人工笔记不发布。模板清理只能删除完全匹配的系统占位章节，必须保留人工扩写、代码围栏及生成段指纹。服务器部署及状态迁移依照skills/model-research/references/server-deployment.md；持久在线和新服务器验收仍待用户租用主机后完成。
+历史 export-md/finalize-md 工具仅用于保留旧成果，候选导入不再生成 Markdown。Grokbot 写作提示词位于 skills/model-research/assets/grokbot-md-prompt.txt，正文需区分实体/变体、证据、评测条件、量化关系、未知与实测边界。Git中的 reports/model-research 是历史快照，不自动推送。
+
+当前部署与验收见 skills/model-research/references/server-deployment.md；同步与校验的 schema、重复身份、字段差异、人工保护和只读边界须用真实表验证。历史云环境与独立研究记录只解释当时状态，不覆盖当前用户指令。

@@ -64,3 +64,5 @@ See `requirements.txt`
 
 - [已生成的研究报告快照](reports/model-research/README.md)
 - [服务器迁移与常驻运行](skills/model-research/references/server-deployment.md)
+
+当前自动化为 CSV 同步与只读表格校验，正文交给 Grokbot。旧 Codex 正文生成与研究队列已移除；[写作提示词](skills/model-research/assets/grokbot-md-prompt.txt)和[校验指南](skills/model-research/README.md)说明当前边界。

@@ -33,25 +33,9 @@ kind支持source_statement、third_party、inference；默认不允许把inferen
 Markdown采用JSON形式的YAML front matter，便于标准库安全解析；正文可人工编辑且始终保留。修改受控值优先通过import-candidates，以确保证据、上下文和范围校验。正文不会自动解析成字段，也不将其中命令作为执行指令。
 
 
-## MD正文协议
+## Markdown 正文交接
 
-候选包可额外包含dossiers数组，每项为entity_id、status、expected_generated_sha256和sections。status为researched、needs_review或unavailable；researched只表示本轮所列来源的阅读整理已完成，未知部分仍须明确保留。身份/版本不匹配时保留needs_review，不反写字段候选。
-
-sections每项包含key（summary/evaluation/derivatives/issues/uncertainties）、markdown和evidence_ids。事实段必须引用已读证据；没有证据的未知项仅放uncertainties。首次expected_generated_sha256为null，后续用请求提供的生成段指纹，不自行猜写。
-
-```json
-{
-  "entity_id": "REPLACE_REQUEST_ENTITY_ID",
-  "status": "researched",
-  "expected_generated_sha256": null,
-  "sections": [
-    {"key": "summary", "markdown": "根据已读取模型卡的范围整理结论。", "evidence_ids": ["source_001"]},
-    {"key": "uncertainties", "markdown": "未进行本项目实测；未读取的外部评测暂不作结论。", "evidence_ids": []}
-  ]
-}
-```
-
-程序写入由HTML注释标记的生成段，同时保存generated_block_sha256。生成段外的人工笔记保持原样；人工改动/删除生成段或旧研究结果晚到时，将新稿保存到conflicts/markdown并保留原文，不覆盖。结构化字段与正文报告可分别提供；正文不会被解析成任意写操作。dossiers/README.md是可阅读的档案和进度索引。
+正文由 Grokbot 编写。当前候选导入仅接受有证据的结构化字段和明确的实体发现；包含 dossiers 正文的候选包会被拒绝。旧 Codex 生成器和研究队列已移除。写作要求见 [Grokbot 提示词](../assets/grokbot-md-prompt.txt)。
 
 ## 布局定稿与阅读快照
 

@@ -25,8 +25,8 @@ class ServiceTests(Workspace):
     def test_frozen_release_runs_without_modifying_remote(self):
         installed = self.install()
         report = service.tick(self.runtime, '2026-11-13')
-        self.assertEqual(report['status'], 'waiting_research')
-        self.assertTrue(Path(report['research_request']).is_file())
+        self.assertEqual(report['status'], 'planned')
+        self.assertNotIn('research_request', report)
         self.assertEqual(report['result']['operations'], 2)
         self.assertEqual(self.remote()['tables']['channels']['records'], [])
         self.assertTrue((Path(installed['release']) / 'skills/model-research/scripts/research.py').is_file())
@@ -37,7 +37,7 @@ class ServiceTests(Workspace):
         self.config(lambda cfg: cfg.update(agent={'enabled': False}))
         self.install()
         report = service.tick(self.runtime, '2026-11-13')
-        self.assertEqual(report['research_runtime'], 'not_required')
+        self.assertFalse(report['model_calls'])
         self.assertNotIn('research_request', report)
         self.assertEqual(report['status'], 'planned')
 
@@ -120,16 +120,6 @@ class ServiceTests(Workspace):
         self.config(lambda c:c.update(allow_writes=False))
         with self.assertRaisesRegex(ResearchError,'allow_writes=true'):
             service.install(self.root/'service',self.config_path,mode='apply')
-
-    @case(target='service.next_due',tags=('schedule','queue'))
-    def test_active_backlog_continues_quickly_but_idle_returns_to_regular_polling(self):
-        settings={'at':'15:00','retry_until':'18:00','retry_minutes':30,'continue_after_minutes':1}
-        previous={'business_date':'2026-11-14','finished_at':'2026-11-14T15:05:00+08:00',
-                  'result':{'research':{'processed':3,'remaining':100}}}
-        clock=datetime.fromisoformat('2026-11-14T15:05:10+08:00')
-        self.assertEqual(service.next_due(settings,previous,clock).isoformat(),'2026-11-14T15:06:00+08:00')
-        previous['result']['research']['processed']=0
-        self.assertEqual(service.next_due(settings,previous,clock).isoformat(),'2026-11-14T15:35:00+08:00')
 
     @case(target='service.next_due',tags=('schedule','readiness'))
     def test_stability_observation_resumes_without_waiting_half_an_hour(self):

@@ -68,15 +68,6 @@ class WritebackTests(Workspace):
         cell='https://github.com/owner/benchmark；镜像 https://huggingface.co/datasets/owner/benchmark'
         self.assertEqual(url_identity(cell,'github.com'),'https://github.com/owner/benchmark')
 
-    @case('integration','research.run -> cached candidates apply despite unrelated Agent failure',('writeback','partial'))
-    def test_agent_failure_does_not_discard_other_valid_write_candidates(self):
-        from research import main
-        self.config(lambda c:c.update(agent={'command':[sys.executable,'-c','import sys;sys.exit(2)']}))
-        result=main(['run','--config',str(self.config_path),'--date','2026-11-13','--mode','apply'])
-        self.assertEqual(result['counts'],{'verified':2})
-        self.assertEqual(result['status'],'partial')
-        self.assertTrue(any(issue['reason']=='research_failed' for issue in result['issues']))
-
     @case(target='sync.plan',tags=('identity','writeback'))
     def test_existing_entity_identity_cannot_be_renamed_by_an_ai_candidate(self):
         from evidence import import_candidates

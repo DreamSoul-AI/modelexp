@@ -8,7 +8,7 @@ ingest保留原件、生成实体和Markdown档案。无manifest时记录unconfi
 
 CSV支持UTF-8/BOM、引号和多行；列名/别名必须唯一匹配。不合法行或重复身份报错；无法确定身份的行记录issues，其他独立行可继续，最终报告保持部分完成。来源替换产生新batch_id，同内容重复接收复用旧批次。
 
-档案初始正文是未核验CSV信息，controlled_fields为空。为避免把AI工作伪装成完成，没有配置Agent且存在需要调研的AI字段时，run输出waiting_research及请求文件；可由当前Agent完成查证后生成候选文件继续。
+同步内部档案保存未核验的CSV输入和字段元信息，用于兼容已有人工保护，不作为调研成果。run 不调用模型或创建研究请求。只读 validate 不创建这些输入 Markdown，只保存校验快照和问题报告。
 
 新增衍生产物需先在项目配置中定义其role、表和字段，再由候选的discoveries提供identity_values和证据字段。未配置的角色不会自动建表。
 

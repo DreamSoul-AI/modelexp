@@ -11,16 +11,11 @@ class MarkdownDeliveryTests(Workspace):
     def generated(self):
         batch = self.batch()
         eid = batch['items'][0]['entity_id']
-        packet = {'schema_version': 1, 'batch_id': batch['batch_id'], 'items': [],
-                  'evidence': [{'evidence_id': 'source', 'url': 'https://example.org/model-card',
-                                'kind': 'source_statement', 'excerpt': 'Source content.',
-                                'observed_at': '2026-11-15T12:00:00+08:00'}],
-                  'dossiers': [{'entity_id': eid, 'status': 'researched', 'expected_generated_sha256': None,
-                                'sections': [{'key': 'summary', 'markdown': '实际来源整理。', 'evidence_ids': ['source']},
-                                             {'key': 'uncertainties', 'markdown': '未实测。', 'evidence_ids': []}]}]}
-        file = self.root / 'research-packet.json'
-        write_json(file, packet)
-        import_candidates(self.cfg, self.state, batch, file)
+        file = dossier_path(self.state, eid)
+        meta, body = read_dossier(file)
+        block = BEGIN + '\n## 自动调研记录\n\n实际来源整理。\n\n依据：https://example.org/model-card\n\n未实测。\n' + END
+        meta.update(generated_block_sha256=digest(block), research={'status': 'researched'})
+        save_dossier(file, meta, body + '\n' + block)
         return dossier_path(self.state, eid)
 
     @case(target='dossiers.clean_layout', tags=('markdown', 'manual'))

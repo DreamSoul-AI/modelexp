@@ -7,7 +7,7 @@ from urllib.parse import urlsplit
 
 from common import ResearchError, atomic_write, digest, now, read_json, write_json
 from identity import identity
-from dossiers import display_title, merge_report, validate_report, write_index
+from dossiers import display_title, write_index
 
 
 def dossier_path(state, entity):
@@ -84,6 +84,8 @@ def import_candidates(cfg, state, batch, path):
     packet = read_json(path)
     if packet.get('schema_version') != 1 or packet.get('batch_id') != batch['batch_id']:
         raise ResearchError('candidate packet is for a different batch or schema version')
+    if packet.get('dossiers'):
+        raise ResearchError('Markdown generation was removed; supply Grokbot documents separately')
     evidence = {}
     for raw in packet.get('evidence', []):
         entry = validate_evidence(raw)
@@ -132,16 +134,6 @@ def import_candidates(cfg, state, batch, path):
             if not set(allowed[key].get('requires_context', [])) <= set(value.get('context', {})):
                 raise ResearchError('evaluation candidate is missing protocol context')
         validated.append((item, fields))
-    reports = {}
-    for report in packet.get('dossiers', []):
-        eid = report.get('entity_id') if isinstance(report, dict) else None
-        if eid not in work or eid in reports:
-            raise ResearchError('unknown or duplicate dossier entity')
-        validate_report(report, evidence)
-        reports[eid] = report
-    # Dossiers can be researched without proposing any structured field change.
-    for eid in set(reports) - seen:
-        validated.append((work[eid], {}))
     # Validate everything before touching dossiers. Evidence IDs are versioned by content hash.
     evidence_root = state.root / 'evidence'
     evidence_root.mkdir(exist_ok=True)
@@ -153,12 +145,6 @@ def import_candidates(cfg, state, batch, path):
         prepare_dossiers(state, {**batch, 'items': [item]})
         file = dossier_path(state, item['entity_id'])
         meta, body = read_dossier(file)
-        if item['entity_id'] in reports:
-            meta, body, conflict = merge_report(state, item, batch, reports[item['entity_id']], evidence, meta, body)
-            if conflict:
-                conflicts.append({'entity_id': item['entity_id'], 'reason': conflict})
-                continue
-            dossier_count += 1
         for key, value in fields.items():
             meta['controlled_fields'][key] = {**value, 'evidence': [evidence[r] for r in value['evidence_ids']]}
         save_dossier(file, meta, body)

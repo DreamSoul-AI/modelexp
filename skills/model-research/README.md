@@ -1,138 +1,55 @@
-# Model 调研自动化
+# Model 资料同步与表格校验
 
-在 `gyd` 分支实现的首版 skill。接收指定业务日的 CSV，保留原件，建立稳定实体与 Markdown 档案，接收带证据的调研候选，生成并执行飞书字段增量计划。原有 `src/` 训练流程不受影响。
+当前版本将 Grokbot 成品 CSV 增量同步到飞书，并独立校验字段规则与 CSV/线上记录的一致性。Markdown 正文交由 Grokbot；本程序不调用模型、不建立研究队列、不生成调研正文。既有 `src/` 训练流程不变。
 
-## 先跑本地演示
+## 使用入口
 
-Python 3.11+，Linux/macOS，无新增 Python 依赖。从仓库根目录执行；示例目录必须为空且位于 checkout 外，可换成自己的绝对路径。
-
-```bash
-python skills/model-research/scripts/research.py demo --directory /tmp/model-research-demo --date 2026-11-13
-python skills/model-research/scripts/research.py run --config /tmp/model-research-demo/project.json --date 2026-11-13 --mode apply
-python skills/model-research/scripts/research.py run --config /tmp/model-research-demo/project.json --date 2026-11-13 --mode apply
-```
-
-演示只操作目录内的 JSON 后端：第一轮新增两个渠道，第二轮零操作。它用于验证流程，不进行真实调研，也不访问飞书。
-
-## 接入实际项目
-
-1. 将 [配置样例](assets/project.example.json) 复制到 checkout 外。配置、业务状态和凭据分别保管；配置与 state_dir 推荐都放持久磁盘。此云环境的 `/workspace` 是运行机文件系统，写文件不会自动进入 GitHub 或飞书。
-2. 读取 [SKILL.md](SKILL.md)，使用已安装的飞书技能确认 CLI、用户登录和目标范围。实际 CLI 可执行路径通过 `backend.command` 的 argv 数组提供，不依赖固定机器路径。
-3. 配置真实 base_token、table_id、field_id、CSV 列、类型与身份键。角色可配置 models、benchmarks、artifacts、channels 等；脚本不创建表，不推断未确认的映射。先用 `doctor` 和 `inspect --role <角色>` 检查。
-4. 默认 `allow_writes=false`、字段 `policy=unassigned/manual`、`allow_create=false`。实际已授权的 AI 字段才设为 `ai`；新建还需满足身份和 required_on_create。类型、枚举和只读规则始终以实时 schema 核对。
-5. 生产方完成声明参照 [manifest](assets/batch.example.json)。没有声明时默认禁止apply；可配置stable_observations，以至少60秒间隔的两次一致内容观察确认暂时稳定，变化或缺失会重新观察。allow_unconfirmed_input只供明确接受未确认输入的场景，不是本次自动部署采用的方式。
-
-当前用户已确认Grokbot CSV是同步来源，日常流程直接导入。相应字段设置accept_upstream=true、prefer_upstream=true，agent.enabled=false且不配置agent.command；旧调研候选不盖过CSV，后续人工修改仍受三方比较保护。CSV来源归档不等于本程序独立验证其研究结论。
-
-列名按column/column_aliases定位，value_aliases仅使用明确同义映射；多选兼容中文逗号，单选保留完整发布者名称。实时读取全部下拉选项，CLI截断时继续分页。明确配置allow_new_options的发布者单选可追加新标签，保留原选项、类型、说明和默认值。backend.batch_size=200按表批量提交，统一回读；提交结果不明时先核验，不重复新增。
-
-## 一次完整处理
-
-以下尖括号是待替换参数。命令均从仓库根目录运行。
+Python 3.11+ 标准库，Linux/macOS；飞书通过官方 lark-cli，以 `--as user` 操作。私有配置和状态放 checkout 外。先读取 [SKILL.md](SKILL.md)、[配置样例](assets/project.example.json) 和[服务器部署指南](references/server-deployment.md)。
 
 ```text
-python skills/model-research/scripts/research.py doctor --config <项目配置>
-python skills/model-research/scripts/research.py inspect --config <项目配置> --role <角色>
-python skills/model-research/scripts/research.py ingest --config <项目配置> --date <业务日> [--manifest <完成声明>]
-python skills/model-research/scripts/research.py import-candidates --config <项目配置> --batch <批次ID> --candidates <候选JSON>
-python skills/model-research/scripts/research.py plan --config <项目配置> --batch <批次ID>
-python skills/model-research/scripts/research.py apply --config <项目配置> --plan <计划文件>
+python3 skills/model-research/scripts/research.py doctor --config <配置>
+python3 skills/model-research/scripts/research.py inspect --config <配置> --role models
+python3 skills/model-research/scripts/research.py run --config <同步配置> --date <业务日> --mode apply
+python3 skills/model-research/scripts/research.py validate --config <只读校验配置> --date <业务日>
 ```
 
-`run --date <业务日> --mode plan|apply` 串起上述阶段，可传 `--candidates`。存在需要调研的字段而未配置 Agent 时，返回 waiting_research 和 request 文件，交由当前 Agent 依 [候选协议](references/evidence.md) 查证并生成候选。脚本不冒充已经搜索或读过来源。
+同步配置 `allow_writes=true`，受控字段明确 `accept_upstream=true`、`prefer_upstream=true`。Agent 必须关闭；旧模型命令或 `agent.enabled=true` 会明确报错。无生产方完成声明时，至少两次相同内容、间隔不少于60秒的稳定观察后才写入。字段映射、格式规范、批量提交与人工保护沿用原规则；未知提交先对账，不重复新建。
 
-若要无人值守执行，配置 `agent.command`：程序接收追加的 request JSON 路径，以 stdout 返回候选 JSON，诊断写 stderr，非零退出或超时视为失败。程序需自行提供检索、模型认证和工具；详见 [运行协议](references/runtime.md)。已提供真实Codex适配器；配置与自动调度见下文。
+校验配置 `allow_writes=false`，使用独立 state_dir；复制同步配置的字段归属与列映射，不把所有字段改为 unassigned。配置 `validation.baseline_state_dir` 指向同步 state，以只读方式识别已保护的人工修改。校验不会推进同步基线。
 
-## 初始基线与失败恢复
+## 校验范围
 
-已有线上值与候选不同且无基线时，先核对唯一实体及 record_id，再执行本地 `adopt`；该命令将线上值镜像为本地基线，保留 Markdown 正文，不写飞书。随后重新导入研究候选再 plan。
+- 读取所有配置表的实时 schema 和记录，检查映射字段类型、枚举值、日期格式、完整实体身份、重复身份与重复 record_id。
+- 逐项比较当前业务日 CSV 与唯一匹配的线上记录，报告漏同步、字段差异、映射改变、输入错误与双方冲突。
+- 人工维护、公式、只读、未归属字段不按 CSV 强制一致；已保护的人工修订单列为信息，不自动覆盖。
+- 历史记录不因当天 CSV 缺行而被删除或判为漏项。量化与后训练表没有当前 CSV 时仍检查其映射字段和身份，但不冒充做过 CSV 对照。
+- 输出私有 `state/validation/latest.json`、逐次 JSON 和 UTF-8 BOM 问题 CSV。字段包含严重性、原因、表角色、实体、record_id、CSV 行号、字段、期望值与实际值；保留读取快照。
+
+这是结构与一致性校验，不验证许可、模型规模、量化效果、跑分等事实的真实性，不调用模型或自动访问研究来源。校验结果有错误或警告时返回 `partial`（CLI退出码3）；严重性 info 的人工差异不阻断通过。输入不稳定、缺失或后端不可读不能报通过。
+
+## 两项定时服务
 
 ```text
-python skills/model-research/scripts/research.py adopt --config <项目配置> --batch <批次ID> --entity <实体ID> --record-id <线上记录ID>
-python skills/model-research/scripts/research.py verify --config <项目配置> --plan <原计划文件>
-python skills/model-research/scripts/research.py resume --config <项目配置> --run <原运行ID>
+python3 skills/model-research/scripts/service.py --root <csv目录> install --config <同步配置> --mode apply --at 12:00 --retry-until 18:00 --continue-after-minutes 1
+python3 skills/model-research/scripts/service.py --root <validate目录> install --config <只读校验配置> --mode validate --at 12:00 --retry-until 18:00 --continue-after-minutes 1
 ```
 
-`verify` 只查询并对账，绝不重发写请求；`resume` 回到原计划，先对账未知提交，再处理未提交项。同一实体有 unknown/submitting/submitted 时，新批次不能绕过该状态。查不到已提交结果时继续保留 unknown，不自动重建。
+两服务使用独立 state、锁和运行记录。systemd 以前台 daemon 管理开机恢复；内部调度使用 Asia/Shanghai，稳定观察阶段一分钟接续，常规检查间隔30分钟。校验可在同步之前发现临时差异，下次只读检查会更新报告，不会争抢同步写锁。
 
-源编号重编由身份冲突阻断；人工核对之后，可用 `resolve-identity --role <角色> --source-id <来源编号> --entity <实体ID>` 修正本地别名。它不变更线上记录和历史批次。
+## 恢复与历史数据
 
-## 产物与验证
+`ingest`、`plan`、`apply`、`verify`、`resume`、`adopt`、`resolve-identity` 保留原有保护与对账规则，参见[同步与恢复](references/sync.md)。保留 SQLite 映射、字段基线、原 CSV、证据及历史人工修改。CSV 内部 dossier 是既有同步元信息存储，不是新生成的研究正文。
 
-配置的 state_dir 下保存 incoming 原件、batches、evidence、dossiers、requests、plans、runs 与 SQLite 映射/基线/操作日志。Markdown front matter 使用 JSON（合法 YAML）；生成段可由研究报告增量更新，人工笔记保留；生成段被人工修改时转为冲突。运行报告含结果和问题入口，证据 JSON 保留实际来源片段；脚本校验结构、引用和上下文，不替代阅读真伪判断。
+旧 `research` 服务模式、Codex 正文适配器和研究队列已移除。旧研究服务应停用并屏蔽，私有历史 state 可离线归档。保留 `export-md`、`finalize-md` 仅供历史文档迁移；候选导入不再接受 dossiers 正文。历史报告位于 [reports/model-research](../../reports/model-research/README.md)，不代表自动更新。
 
-```bash
-python skills/model-research/tests/run_tests.py --output /tmp/model-research-test-results
-```
+## Grokbot Markdown 交接
 
-输出目录应为新目录；保存 manifest.json、逐项 events.jsonl 和 report.md，支持按级别、标签、模块和用例筛选、超时、报告重建及排除已通过用例的接续。零用例不算通过。相关回归使用本地后端和测试用外部进程，覆盖身份重编、冲突、人工保护、分页、提交后回执丢失及恢复。
+完整可复制的[写作提示词](assets/grokbot-md-prompt.txt)规定实体、版本、来源、评测条件、量化/训练关系、未知项与人工保护。Grokbot 生成文档和索引后打包交付，不由本程序自动发布或推送。
 
-飞书实际只读联调与本地写入测试分别记录在 [实现运行记录](<../../docs/运行记录 Run Record/2026-11-14 自动化首版实现验证.md>)。该历史首版记录尚未写线上业务表；后续真实写回和Codex调研见下方增量记录；真实过期续期、主机重启和定时完整周期仍未验收。官方 CLI 无条件写入能力时，提交前检查与实际写入间仍存在竞争窗口；详见 [同步边界](references/sync.md)。
-
-`source_links`、backfill、评分公式改写、清空表和云端 Markdown 交付均未启用。
-
-## 部署到当前云环境试运行
-
-用户明确要求部署时，Linux 环境可执行：
+## 验证
 
 ```text
-python skills/model-research/scripts/service.py --root <仓外运行目录> install --config <私有项目JSON>
-<仓外运行目录>/manage start
-<仓外运行目录>/manage status
-<仓外运行目录>/manage tick --date <明确业务日>
-<仓外运行目录>/manage stop
+python3 skills/model-research/tests/run_tests.py --output <新的仓外结果目录>
 ```
 
-运行目录保存 releases/current、私有 project.json（由部署方提供）、state、deployment.json、process.json、heartbeat.json、last-run.json、worker-results 和日志；源码副本与业务状态分开。默认plan部署保持只读；已授权的apply部署要求allow_writes=true并逐项回读。程序默认15:00开始；当前部署按用户要求在北京时间12:00开始、18:00前运行；当前有进展且有剩余时1分钟接续，空闲或退避时30分钟重查。渠道可用 latest_snapshot=true 复用最近已交付快照，模型与 Benchmark 仍严格取当天日报。
-
-当前实例按用户要求使用apply直接同步Grokbot CSV；日常同步不调用Codex，不等待Markdown调研。环境停止后服务可能停止，需要status核查并在必要时start；没有安装系统级自启动或发布共享环境。后台Codex和MD调研使用另一独立任务运行，早期部署经过见 [部署记录](<../../docs/运行记录 Run Record/2026-11-14 云环境试运行部署.md>)。
-
-
-## 正文调研与接续
-
-配置agent.command为已部署版本的Python Codex适配器入口，并配置codex_state_dir及max_entities_per_run。外部Agent也可继续按原argv/JSON协议接入。run自动处理本轮可研究项，生成证据、正文和字段候选；随后生成计划，并按部署模式plan预览或apply写回。dossiers/README.md提供档案索引，research/jobs保存成功/失败回执。remaining>0不表示整批已完成；后续同日期调度继续处理未完成项，成功输入不重复调用模型。
-
-自动整理严格限于已实际下载的来源和阅读范围。模型卡的系列宣传不等于具体变体实测，未读权重、量化制品和评测协议保留未知。详细结构见 [证据协议](references/evidence.md)。真实样例与服务状态见 [接入记录](<../../docs/运行记录 Run Record/2026-11-14 后台调研与正文接入.md>)。
-
-
-## 自动更新多维表格
-
-正式自动写回使用：
-
-```text
-python skills/model-research/scripts/service.py --root <运行目录> install --config <自动配置> --mode apply --continue-after-minutes 1
-<运行目录>/manage start
-```
-
-同时配置allow_writes=true、具体AI字段与allow_create；不改变表结构或人工评分规则。无成功基线的既有非空值保留，空值可补，成功回读的程序字段后续用三方比较维护。上游没有完成manifest时可用间隔不少于60秒的两次相同内容观察；文件变化重新计时。未知提交先核验，不重复新增。
-
-当前CSV直接同步按整份日报生成计划，再按表、每批最多200条提交并回读；不再按每轮3个实体重新调研。当前部署的工作窗口为北京时间12:00—18:00，空闲时30分钟重查；跨日期未完成项可显式指定日期接续。早期调研写回证据见 [自动写回记录](<../../docs/运行记录 Run Record/2026-11-14 多维表格自动写回.md>)。
-
-## AI调研与MD独立运行
-
-CSV同步与AI调研分别部署。CSV配置保持Agent关闭，以成品CSV直接写表；研究配置打开Agent，allow_writes=false并使用独立state_dir，避免长模型调用阻塞CSV，也不把研究候选反写成品CSV字段。
-
-```text
-python skills/model-research/scripts/research.py research --config <独立研究配置> --date <业务日>
-python skills/model-research/scripts/service.py --root <独立研究目录> install --config <独立研究配置> --mode research --at 12:00 --retry-until 23:59 --continue-after-minutes 1
-<独立研究目录>/manage start
-```
-
-agent.roles只研究模型、Benchmark及配置的衍生产物；渠道仍直接同步。include_previous_batches=true合并本研究状态下历日未完成项，相同实体采用最新输入、当天优先，同内容成功结果复用。仍限定每轮max_entities_per_run并保存失败退避；未完成保持partial。旧日正常日报可用ingest --date纳入队列，不接入排除的backfill文件。
-
-AI正文位于独立研究state_dir/dossiers，含证据、范围和待核实项；CSV状态中的MD是同步元信息/输入归档，不作为AI完成证据。来源仅基于实际下载的有限材料，未读取的论文/Issue和实测不得写成已验证。两项只在运行实例在线时执行，新实例须恢复各自进程。
-
-## 最终阅读版与服务器交付
-
-- [研究报告快照](../../reports/model-research/README.md)：已生成正文的阅读版及来源，不含输入模板和私有元数据。
-- [Linux服务器迁移指南](references/server-deployment.md)：持久目录、CLI授权、旧队列接续、systemd及验收边界。
-- [systemd模板](deploy/model-research@.service)：开机启动与异常重启；每天12:00仍由程序内部调度。
-
-```text
-python skills/model-research/scripts/research.py finalize-md --config <研究配置>
-python skills/model-research/scripts/research.py export-md --config <研究配置> --output reports/model-research
-```
-
-私有档案已按名称标题、自动调研正文、原始输入、人工笔记组织；只删除完全匹配的旧占位区，保留人工扩展和原输入，并保存原文件备份。公开快照只取带有效指纹的AI生成正文，人工笔记不发布，未知/待核实状态如实展示。导出器保护已有人工作业，不自动覆盖修改过的导出文件。
-
-运行中的后续研究继续写私有state；本次Git报告是一次快照，不代表全部研究已完成，也不表示已实现每天自动推送报告。私有迁移包单独保存，包含CSV、数据库、基线、证据、MD和队列，不含CLI登录凭据。新服务器仍需授权与真实重启/定时验收。
+测试使用本地文件后端，覆盖只读校验、字段冲突、人工修订、历史记录、重复运行、提交回执丢失和恢复；真实飞书校验另行记录。未运行或失败项不计通过。
