@@ -48,7 +48,7 @@ See `requirements.txt`
 ## Acknowledgements
 *Enmao Diao*
 
-## Model 调研自动化（gyd）
+## Model 调研自动化（dev）
 
 此分支实现了模型调研自动化首版 skill 和 Python CLI：CSV 接收、证据档案、字段增量计划、人工修改保护及中断恢复。Python 3.11+ 标准库即可运行；当前云环境按用户要求直接同步Grokbot成品CSV：统一字段格式后批量写入、回读，并保护人工字段及评分规则；后台Codex调研与MD正文由独立任务执行，日常CSV同步不等待研究完成。详情见使用指南。
 
