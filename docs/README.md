@@ -1,6 +1,6 @@
 # Model 调研自动化文档
 
-`dev`分支当前已实现Grokbot成品CSV直接同步：字段映射、格式统一、按表批量写入和回读；日常不再重新调研，不依赖Codex或MD正文。AI调研和MD已恢复为独立服务；早期版本保留为历史记录，长期无人值守继续验收。
+`gyd`分支当前已实现Grokbot成品CSV直接同步：字段映射、格式统一、按表批量写入和回读；日常不再重新调研，不依赖Codex或MD正文。AI调研和MD已恢复为独立服务；早期版本保留为历史记录，长期无人值守继续验收。
 
 - [使用指南](../skills/model-research/README.md)及[Skill 入口](../skills/model-research/SKILL.md)
 - [首版开发记录](<开发记录 Development Record/2026-11-14 自动化首版实现.md>)

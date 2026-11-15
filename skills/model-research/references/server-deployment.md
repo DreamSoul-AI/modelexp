@@ -1,6 +1,6 @@
 # Linux服务器迁移与运行
 
-交付目标：将CSV直接同步、AI调研与MD两个独立服务迁到持续在线的Linux服务器。代码在GitHub的dev分支；研究阅读快照在reports/model-research。私有配置、同步基线、证据和队列通过私有迁移包转移，不能从Git仓库重建这些运行数据。
+交付目标：将CSV直接同步、AI调研与MD两个独立服务迁到持续在线的Linux服务器。代码在GitHub的gyd分支；研究阅读快照在reports/model-research。私有配置、同步基线、证据和队列通过私有迁移包转移，不能从Git仓库重建这些运行数据。
 
 ## 服务器准备
 
@@ -19,7 +19,7 @@ sudo install -d -o modelresearch -g modelresearch -m 700 /srv/model-research
 
 ```text
 /srv/model-research/
-├── repo/               # dev代码
+├── repo/               # gyd代码
 ├── csv/
 │   ├── project.json    # 私有CSV配置
 │   ├── state/          # CSV原件、SQLite基线、映射及提交回执
@@ -33,7 +33,7 @@ sudo install -d -o modelresearch -g modelresearch -m 700 /srv/model-research
 ## 获取代码与私有运行数据
 
 ```bash
-git clone --branch dev https://github.com/DreamSoul-AI/modelexp.git /srv/model-research/repo
+git clone --branch gyd https://github.com/DreamSoul-AI/modelexp.git /srv/model-research/repo
 ```
 
 私有迁移包另行下载或通过SSH传输，权限设为600，不提交GitHub。当前交付的包包含csv/与ai/的project.json和state/、文件哈希清单、保留业务日期；不含CLI登录凭据、安装依赖、旧进程或可直接复用的current部署链接。
