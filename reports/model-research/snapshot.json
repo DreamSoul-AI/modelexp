@@ -1,0 +1,900 @@
+{
+  "format_version": 1,
+  "exported_at": "2026-11-15T19:05:23+08:00",
+  "reports": [
+    {
+      "entity_id": "models_01ab863cfb223221eca018ef",
+      "role": "models",
+      "name": "Qwen3-4B-Instruct-2507",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:23:48+08:00",
+      "file": "models_01ab863cfb223221eca018ef.md"
+    },
+    {
+      "entity_id": "models_041870b996b1015292deba47",
+      "role": "models",
+      "name": "Qwen3-VL-Reranker-2B",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:41:07+08:00",
+      "file": "models_041870b996b1015292deba47.md"
+    },
+    {
+      "entity_id": "models_09292fd08b8a621cb8bc2ef3",
+      "role": "models",
+      "name": "Pythia-160M",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:49:14+08:00",
+      "file": "models_09292fd08b8a621cb8bc2ef3.md"
+    },
+    {
+      "entity_id": "models_0baef1f46de51128e82f6957",
+      "role": "models",
+      "name": "Light-R1-32B-DS",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:14:48+08:00",
+      "file": "models_0baef1f46de51128e82f6957.md"
+    },
+    {
+      "entity_id": "models_0ff41544dd4ef48633260a82",
+      "role": "models",
+      "name": "Light-IF-32B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:12:02+08:00",
+      "file": "models_0ff41544dd4ef48633260a82.md"
+    },
+    {
+      "entity_id": "models_11272dbc036a20a21ef09e4d",
+      "role": "models",
+      "name": "e5-base",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:52:52+08:00",
+      "file": "models_11272dbc036a20a21ef09e4d.md"
+    },
+    {
+      "entity_id": "models_1210e3cf3f51ded644c573c3",
+      "role": "models",
+      "name": "DialogueSidon2",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:56:47+08:00",
+      "file": "models_1210e3cf3f51ded644c573c3.md"
+    },
+    {
+      "entity_id": "models_131417939f1a45de656a746c",
+      "role": "models",
+      "name": "Lyric Voice（hi）",
+      "status": "researched",
+      "updated_at": "2026-11-15T19:03:16+08:00",
+      "file": "models_131417939f1a45de656a746c.md"
+    },
+    {
+      "entity_id": "models_19dc13049aedb84e603a473f",
+      "role": "models",
+      "name": "Light-R1-14B-DS",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:14:48+08:00",
+      "file": "models_19dc13049aedb84e603a473f.md"
+    },
+    {
+      "entity_id": "models_1b2a221f1793e951c509628b",
+      "role": "models",
+      "name": "SmolLM2-135M",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:45:10+08:00",
+      "file": "models_1b2a221f1793e951c509628b.md"
+    },
+    {
+      "entity_id": "models_2529466bbb0ded5111226ec3",
+      "role": "models",
+      "name": "TimeLens2-9B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:26:47+08:00",
+      "file": "models_2529466bbb0ded5111226ec3.md"
+    },
+    {
+      "entity_id": "models_29bdeba1a8d616b50e498084",
+      "role": "models",
+      "name": "BlinkOPD-4B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:38:44+08:00",
+      "file": "models_29bdeba1a8d616b50e498084.md"
+    },
+    {
+      "entity_id": "models_2e5da6e4d652f8b5c18d479e",
+      "role": "models",
+      "name": "Hark",
+      "status": "researched",
+      "updated_at": "2026-11-15T19:03:16+08:00",
+      "file": "models_2e5da6e4d652f8b5c18d479e.md"
+    },
+    {
+      "entity_id": "models_2e79989b934dd75e7cf77ebd",
+      "role": "models",
+      "name": "Sapiens2-1B 人体部位分割",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:47:34+08:00",
+      "file": "models_2e79989b934dd75e7cf77ebd.md"
+    },
+    {
+      "entity_id": "models_2fab82918289d75a2de028af",
+      "role": "models",
+      "name": "360Zhinao3-7B-Instruct",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:21:02+08:00",
+      "file": "models_2fab82918289d75a2de028af.md"
+    },
+    {
+      "entity_id": "models_33904a1d3b3cd402c522570b",
+      "role": "models",
+      "name": "Sapiens2-1B 人像抠图",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:53:31+08:00",
+      "file": "models_33904a1d3b3cd402c522570b.md"
+    },
+    {
+      "entity_id": "models_38523cd3a19d51796112a9be",
+      "role": "models",
+      "name": "granite-4.1-30b",
+      "status": "researched",
+      "updated_at": "2026-11-15T17:59:14+08:00",
+      "file": "models_38523cd3a19d51796112a9be.md"
+    },
+    {
+      "entity_id": "models_3a35272d244b40a2e050a40f",
+      "role": "models",
+      "name": "granite-4.1-3b",
+      "status": "researched",
+      "updated_at": "2026-11-15T17:53:15+08:00",
+      "file": "models_3a35272d244b40a2e050a40f.md"
+    },
+    {
+      "entity_id": "models_41370e04530d55be9be774eb",
+      "role": "models",
+      "name": "mxbai-embed-large-v1",
+      "status": "needs_review",
+      "updated_at": "2026-11-14T16:56:18+08:00",
+      "file": "models_41370e04530d55be9be774eb.md"
+    },
+    {
+      "entity_id": "models_4291f29ae8addb04d996481d",
+      "role": "models",
+      "name": "Light-TLLM-7B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:23:56+08:00",
+      "file": "models_4291f29ae8addb04d996481d.md"
+    },
+    {
+      "entity_id": "models_42cad9b604e84fc24c1f2d5f",
+      "role": "models",
+      "name": "Sapiens2-1B 预训练骨干",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:44:40+08:00",
+      "file": "models_42cad9b604e84fc24c1f2d5f.md"
+    },
+    {
+      "entity_id": "models_438991a03201af1b2bbd6987",
+      "role": "models",
+      "name": "Light-R1-32B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:17:49+08:00",
+      "file": "models_438991a03201af1b2bbd6987.md"
+    },
+    {
+      "entity_id": "models_4418b19283d15232b687ff5c",
+      "role": "models",
+      "name": "Typhoon OCR V2 0.8B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:38:44+08:00",
+      "file": "models_4418b19283d15232b687ff5c.md"
+    },
+    {
+      "entity_id": "models_4a7920ddcdf0a674d57b685d",
+      "role": "models",
+      "name": "Light-IF-8B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:12:02+08:00",
+      "file": "models_4a7920ddcdf0a674d57b685d.md"
+    },
+    {
+      "entity_id": "models_4db130bd4ad96037a27e0b8e",
+      "role": "models",
+      "name": "360Zhinao3-7B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:21:02+08:00",
+      "file": "models_4db130bd4ad96037a27e0b8e.md"
+    },
+    {
+      "entity_id": "models_516b30c8059b8a544caa668e",
+      "role": "models",
+      "name": "OPT-125M",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:45:10+08:00",
+      "file": "models_516b30c8059b8a544caa668e.md"
+    },
+    {
+      "entity_id": "models_51b0baf8bf573866cdecbcab",
+      "role": "models",
+      "name": "Sapiens2-1B 表面法线估计",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:53:31+08:00",
+      "file": "models_51b0baf8bf573866cdecbcab.md"
+    },
+    {
+      "entity_id": "models_573268f2efe5f85166198b3e",
+      "role": "models",
+      "name": "Sapiens2-5B 人体部位分割",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:50:28+08:00",
+      "file": "models_573268f2efe5f85166198b3e.md"
+    },
+    {
+      "entity_id": "models_57b583574ee082d93c5ddf23",
+      "role": "models",
+      "name": "granite-4.1-8b-base",
+      "status": "researched",
+      "updated_at": "2026-11-15T17:56:13+08:00",
+      "file": "models_57b583574ee082d93c5ddf23.md"
+    },
+    {
+      "entity_id": "models_5e8537186d1ca726cba065af",
+      "role": "models",
+      "name": "TimeLens2-27B-SFT",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:29:36+08:00",
+      "file": "models_5e8537186d1ca726cba065af.md"
+    },
+    {
+      "entity_id": "models_5e8b3ea0d2914b186793eda0",
+      "role": "models",
+      "name": "WavLM speaker diarization (AMI)",
+      "status": "researched",
+      "updated_at": "2026-11-15T19:00:07+08:00",
+      "file": "models_5e8b3ea0d2914b186793eda0.md"
+    },
+    {
+      "entity_id": "models_636ab4547dc47f435ed43846",
+      "role": "models",
+      "name": "granite-guardian-4.1-8b",
+      "status": "researched",
+      "updated_at": "2026-11-15T17:59:14+08:00",
+      "file": "models_636ab4547dc47f435ed43846.md"
+    },
+    {
+      "entity_id": "models_68b58ac4e6e04e4b24571454",
+      "role": "models",
+      "name": "LFM3-1.7B-Base",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:09:01+08:00",
+      "file": "models_68b58ac4e6e04e4b24571454.md"
+    },
+    {
+      "entity_id": "models_6e15fbbf24f12317f35cf212",
+      "role": "models",
+      "name": "TimeLens2-35B-A3B-SFT",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:29:36+08:00",
+      "file": "models_6e15fbbf24f12317f35cf212.md"
+    },
+    {
+      "entity_id": "models_72ab4f6c05aba887be9ffde3",
+      "role": "models",
+      "name": "granite-switch-4.1-30b",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:09:01+08:00",
+      "file": "models_72ab4f6c05aba887be9ffde3.md"
+    },
+    {
+      "entity_id": "models_74e3da8ebacfacfe66e2928d",
+      "role": "models",
+      "name": "TimeLens2-8B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:35:34+08:00",
+      "file": "models_74e3da8ebacfacfe66e2928d.md"
+    },
+    {
+      "entity_id": "models_75af962383b028fbac8af528",
+      "role": "models",
+      "name": "multilingual-e5-base",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:52:52+08:00",
+      "file": "models_75af962383b028fbac8af528.md"
+    },
+    {
+      "entity_id": "models_76451f54131d9fe4dfee35c9",
+      "role": "models",
+      "name": "Ornith-1.0-35B",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:49:14+08:00",
+      "file": "models_76451f54131d9fe4dfee35c9.md"
+    },
+    {
+      "entity_id": "models_78e46f533df5394c7830b07b",
+      "role": "models",
+      "name": "TinyR1-Safety-8B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:21:02+08:00",
+      "file": "models_78e46f533df5394c7830b07b.md"
+    },
+    {
+      "entity_id": "models_7cad1bd68a71e358fb948a15",
+      "role": "models",
+      "name": "TimeLens2-2B-SFT",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:32:26+08:00",
+      "file": "models_7cad1bd68a71e358fb948a15.md"
+    },
+    {
+      "entity_id": "models_808a6b62bb710f3b5de54365",
+      "role": "models",
+      "name": "Sapiens2-0.8B 表面法线估计",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:50:28+08:00",
+      "file": "models_808a6b62bb710f3b5de54365.md"
+    },
+    {
+      "entity_id": "models_8432c527761796b1c6ea394a",
+      "role": "models",
+      "name": "TimeLens2-35B-A3B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:29:36+08:00",
+      "file": "models_8432c527761796b1c6ea394a.md"
+    },
+    {
+      "entity_id": "models_86cbb8c2f5305938e63a697f",
+      "role": "models",
+      "name": "TimeLens2-27B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:26:47+08:00",
+      "file": "models_86cbb8c2f5305938e63a697f.md"
+    },
+    {
+      "entity_id": "models_871d1caf39483922442814ec",
+      "role": "models",
+      "name": "parakeet-tamil-kili",
+      "status": "researched",
+      "updated_at": "2026-11-15T19:03:16+08:00",
+      "file": "models_871d1caf39483922442814ec.md"
+    },
+    {
+      "entity_id": "models_884630bdf4a3a458b774ab43",
+      "role": "models",
+      "name": "Light-IF-4B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:09:01+08:00",
+      "file": "models_884630bdf4a3a458b774ab43.md"
+    },
+    {
+      "entity_id": "models_89c4e3d028fa5c4018b8cc19",
+      "role": "models",
+      "name": "TimeLens2-8B-SFT",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:35:34+08:00",
+      "file": "models_89c4e3d028fa5c4018b8cc19.md"
+    },
+    {
+      "entity_id": "models_8a36535396872d48583e96dc",
+      "role": "models",
+      "name": "TimeLens2-4B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:32:26+08:00",
+      "file": "models_8a36535396872d48583e96dc.md"
+    },
+    {
+      "entity_id": "models_8a6ecce684cd16077ab4f72a",
+      "role": "models",
+      "name": "TimeLens2-9B-SFT",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:26:47+08:00",
+      "file": "models_8a6ecce684cd16077ab4f72a.md"
+    },
+    {
+      "entity_id": "models_8c238e11ad5ac41a8e74768e",
+      "role": "models",
+      "name": "Qwen3-32B",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:28:46+08:00",
+      "file": "models_8c238e11ad5ac41a8e74768e.md"
+    },
+    {
+      "entity_id": "models_8e5a9acc1f101cd198e53b89",
+      "role": "models",
+      "name": "granite-switch-4.1-8b-preview",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:05:48+08:00",
+      "file": "models_8e5a9acc1f101cd198e53b89.md"
+    },
+    {
+      "entity_id": "models_8f31b43a424c1f4656312b67",
+      "role": "models",
+      "name": "TinyR1-32B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:17:49+08:00",
+      "file": "models_8f31b43a424c1f4656312b67.md"
+    },
+    {
+      "entity_id": "models_921e21c3f10a4d985d8901ca",
+      "role": "models",
+      "name": "Light-R1-7B-DS",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:14:48+08:00",
+      "file": "models_921e21c3f10a4d985d8901ca.md"
+    },
+    {
+      "entity_id": "models_94513f80cb99000abb095def",
+      "role": "models",
+      "name": "Qwen2.5-3B-Instruct",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:23:48+08:00",
+      "file": "models_94513f80cb99000abb095def.md"
+    },
+    {
+      "entity_id": "models_95810ba4e3ee6041bfef4b5b",
+      "role": "models",
+      "name": "granite-4.1-3b-llmon-preview",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:02:32+08:00",
+      "file": "models_95810ba4e3ee6041bfef4b5b.md"
+    },
+    {
+      "entity_id": "models_95d3f6b647ee25629edf7479",
+      "role": "models",
+      "name": "Sapiens2-0.1B 预训练骨干",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:41:43+08:00",
+      "file": "models_95d3f6b647ee25629edf7479.md"
+    },
+    {
+      "entity_id": "models_97954727dad9bf810369ed06",
+      "role": "models",
+      "name": "pearl-chat-85m-base",
+      "status": "researched",
+      "updated_at": "2026-11-15T17:53:15+08:00",
+      "file": "models_97954727dad9bf810369ed06.md"
+    },
+    {
+      "entity_id": "models_99d97c64aba3066bb62ad5c5",
+      "role": "models",
+      "name": "multilingual-e5-large-instruct",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:52:52+08:00",
+      "file": "models_99d97c64aba3066bb62ad5c5.md"
+    },
+    {
+      "entity_id": "models_9a3753adee02a542099d73fc",
+      "role": "models",
+      "name": "granite-4.1-8b-llmon-preview",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:02:32+08:00",
+      "file": "models_9a3753adee02a542099d73fc.md"
+    },
+    {
+      "entity_id": "models_9caabcc0c6d4b93785229e74",
+      "role": "models",
+      "name": "Qwen3-VL-Embedding-8B",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:28:46+08:00",
+      "file": "models_9caabcc0c6d4b93785229e74.md"
+    },
+    {
+      "entity_id": "models_9d6348a7a2425452a89209f2",
+      "role": "models",
+      "name": "gte-large-en-v1.5",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:56:18+08:00",
+      "file": "models_9d6348a7a2425452a89209f2.md"
+    },
+    {
+      "entity_id": "models_a2268c68d38b2b4bca54433f",
+      "role": "models",
+      "name": "DWSLM-256M-Base",
+      "status": "researched",
+      "updated_at": "2026-11-15T17:49:16+08:00",
+      "file": "models_a2268c68d38b2b4bca54433f.md"
+    },
+    {
+      "entity_id": "models_a3a940225cb76be3a988f54c",
+      "role": "models",
+      "name": "granite-switch-4.1-3b-preview",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:02:32+08:00",
+      "file": "models_a3a940225cb76be3a988f54c.md"
+    },
+    {
+      "entity_id": "models_a53ef681c541ed421d299077",
+      "role": "models",
+      "name": "BlinkOPD-9B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:38:44+08:00",
+      "file": "models_a53ef681c541ed421d299077.md"
+    },
+    {
+      "entity_id": "models_a59d5c6c1a566dc1cad1c1e1",
+      "role": "models",
+      "name": "KV1-1.2B",
+      "status": "researched",
+      "updated_at": "2026-11-15T17:49:16+08:00",
+      "file": "models_a59d5c6c1a566dc1cad1c1e1.md"
+    },
+    {
+      "entity_id": "models_a9d20d28ed99a0e83ab20a76",
+      "role": "models",
+      "name": "gte-multilingual-base",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:56:18+08:00",
+      "file": "models_a9d20d28ed99a0e83ab20a76.md"
+    },
+    {
+      "entity_id": "models_ab68e7bad92ef6f26e64dc75",
+      "role": "models",
+      "name": "Sapiens2-0.4B 人体部位分割",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:47:34+08:00",
+      "file": "models_ab68e7bad92ef6f26e64dc75.md"
+    },
+    {
+      "entity_id": "models_aee6a0e321bd955e659dd938",
+      "role": "models",
+      "name": "RzenEmbed-v2-7B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:23:56+08:00",
+      "file": "models_aee6a0e321bd955e659dd938.md"
+    },
+    {
+      "entity_id": "models_af5150fb5bc018523dbb41d6",
+      "role": "models",
+      "name": "NVIDIA-Nemotron-3-Nano-4B-BF16",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:45:10+08:00",
+      "file": "models_af5150fb5bc018523dbb41d6.md"
+    },
+    {
+      "entity_id": "models_b17b430bfe457672194a0029",
+      "role": "models",
+      "name": "TimeLens2-2B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:32:26+08:00",
+      "file": "models_b17b430bfe457672194a0029.md"
+    },
+    {
+      "entity_id": "models_b2064eff0d642dca118504fe",
+      "role": "models",
+      "name": "granite-4.1-3b-base",
+      "status": "researched",
+      "updated_at": "2026-11-15T17:56:13+08:00",
+      "file": "models_b2064eff0d642dca118504fe.md"
+    },
+    {
+      "entity_id": "models_b351434f5c8661cc8b4cd306",
+      "role": "models",
+      "name": "Qwen3-VL-Reranker-8B",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:41:07+08:00",
+      "file": "models_b351434f5c8661cc8b4cd306.md"
+    },
+    {
+      "entity_id": "models_b74b2ba1c821156750789372",
+      "role": "models",
+      "name": "DAW Vocal Denoiser",
+      "status": "researched",
+      "updated_at": "2026-11-15T19:00:07+08:00",
+      "file": "models_b74b2ba1c821156750789372.md"
+    },
+    {
+      "entity_id": "models_ba6ae42865a510a471625556",
+      "role": "models",
+      "name": "parentheses-1.0-240M",
+      "status": "researched",
+      "updated_at": "2026-11-14T15:22:21+08:00",
+      "file": "models_ba6ae42865a510a471625556.md"
+    },
+    {
+      "entity_id": "models_ba793a0821eba9f2e8f2ba9b",
+      "role": "models",
+      "name": "pearl-chat-85m-it",
+      "status": "researched",
+      "updated_at": "2026-11-15T17:53:15+08:00",
+      "file": "models_ba793a0821eba9f2e8f2ba9b.md"
+    },
+    {
+      "entity_id": "models_bb92bb9c6940eb5941cb8cee",
+      "role": "models",
+      "name": "DWSLM-256M-Base-32K",
+      "status": "researched",
+      "updated_at": "2026-11-15T17:49:16+08:00",
+      "file": "models_bb92bb9c6940eb5941cb8cee.md"
+    },
+    {
+      "entity_id": "models_bc29c25876ed47f2301e31c8",
+      "role": "models",
+      "name": "Qwen3-1.7B",
+      "status": "researched",
+      "updated_at": "2026-11-14T15:22:21+08:00",
+      "file": "models_bc29c25876ed47f2301e31c8.md"
+    },
+    {
+      "entity_id": "models_be6de73c483b100e617c00b0",
+      "role": "models",
+      "name": "TinyR1-32B-Preview",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:17:49+08:00",
+      "file": "models_be6de73c483b100e617c00b0.md"
+    },
+    {
+      "entity_id": "models_c25a638045b9e6e8968cfac9",
+      "role": "models",
+      "name": "Sapiens2-0.8B 预训练骨干",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:41:43+08:00",
+      "file": "models_c25a638045b9e6e8968cfac9.md"
+    },
+    {
+      "entity_id": "models_c70e1ad0035b48f2a0d71128",
+      "role": "models",
+      "name": "Sapiens2-0.4B 表面法线估计",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:50:28+08:00",
+      "file": "models_c70e1ad0035b48f2a0d71128.md"
+    },
+    {
+      "entity_id": "models_cd8facaf5232918dc1a42ecd",
+      "role": "models",
+      "name": "TimeLens2-4B-SFT",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:35:34+08:00",
+      "file": "models_cd8facaf5232918dc1a42ecd.md"
+    },
+    {
+      "entity_id": "models_d105ff35f1a9353655cd87a8",
+      "role": "models",
+      "name": "Sapiens2-0.8B 人体部位分割",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:47:34+08:00",
+      "file": "models_d105ff35f1a9353655cd87a8.md"
+    },
+    {
+      "entity_id": "models_d5281d60ed35dbbd50790802",
+      "role": "models",
+      "name": "tiny-voca",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:56:47+08:00",
+      "file": "models_d5281d60ed35dbbd50790802.md"
+    },
+    {
+      "entity_id": "models_d76c1587ca918e0941086a82",
+      "role": "models",
+      "name": "Light-IF-14B",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:12:02+08:00",
+      "file": "models_d76c1587ca918e0941086a82.md"
+    },
+    {
+      "entity_id": "models_d7d4e86da7e4e8cd180a47d4",
+      "role": "models",
+      "name": "granite-switch-4.1-8b",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:05:48+08:00",
+      "file": "models_d7d4e86da7e4e8cd180a47d4.md"
+    },
+    {
+      "entity_id": "models_dbe9985d7bc31a549e0de262",
+      "role": "models",
+      "name": "Mistral-7B-Instruct-v0.2",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:41:07+08:00",
+      "file": "models_dbe9985d7bc31a549e0de262.md"
+    },
+    {
+      "entity_id": "models_dd1aeb6d85fa44c9777ccd88",
+      "role": "models",
+      "name": "granite-switch-4.1-30b-preview",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:05:48+08:00",
+      "file": "models_dd1aeb6d85fa44c9777ccd88.md"
+    },
+    {
+      "entity_id": "models_e31896653df474a120bbc767",
+      "role": "models",
+      "name": "Qwen2.5-0.5B-Instruct",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:23:48+08:00",
+      "file": "models_e31896653df474a120bbc767.md"
+    },
+    {
+      "entity_id": "models_e42d343276f18a79e2c334da",
+      "role": "models",
+      "name": "restore",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:56:47+08:00",
+      "file": "models_e42d343276f18a79e2c334da.md"
+    },
+    {
+      "entity_id": "models_e6e595c2c70b4b83dca818a1",
+      "role": "models",
+      "name": "Sapiens2-5B 表面法线估计",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:53:31+08:00",
+      "file": "models_e6e595c2c70b4b83dca818a1.md"
+    },
+    {
+      "entity_id": "models_e847d415eeb97387c0e5734f",
+      "role": "models",
+      "name": "DistilGPT2",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:49:14+08:00",
+      "file": "models_e847d415eeb97387c0e5734f.md"
+    },
+    {
+      "entity_id": "models_ee215506100f88a7979fc855",
+      "role": "models",
+      "name": "Call Denoiser V4",
+      "status": "researched",
+      "updated_at": "2026-11-15T19:00:07+08:00",
+      "file": "models_ee215506100f88a7979fc855.md"
+    },
+    {
+      "entity_id": "models_f062f53c4438167cfc76d8c8",
+      "role": "models",
+      "name": "360Zhinao3-7B-O1.5",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:23:56+08:00",
+      "file": "models_f062f53c4438167cfc76d8c8.md"
+    },
+    {
+      "entity_id": "models_f2de63fd9e92d43b7caa9adf",
+      "role": "models",
+      "name": "Sapiens2-5B 预训练骨干",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:44:40+08:00",
+      "file": "models_f2de63fd9e92d43b7caa9adf.md"
+    },
+    {
+      "entity_id": "models_f3a4b50eddf0c352b01a762f",
+      "role": "models",
+      "name": "Sapiens2-0.4B 预训练骨干",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:41:43+08:00",
+      "file": "models_f3a4b50eddf0c352b01a762f.md"
+    },
+    {
+      "entity_id": "models_f61f900ea999167e13cfed97",
+      "role": "models",
+      "name": "Qwen3-Reranker-8B",
+      "status": "researched",
+      "updated_at": "2026-11-14T16:28:46+08:00",
+      "file": "models_f61f900ea999167e13cfed97.md"
+    },
+    {
+      "entity_id": "models_f735ca43bd30c5b8751a442c",
+      "role": "models",
+      "name": "granite-4.1-8b",
+      "status": "researched",
+      "updated_at": "2026-11-15T17:56:13+08:00",
+      "file": "models_f735ca43bd30c5b8751a442c.md"
+    },
+    {
+      "entity_id": "models_fa7caf6cf624a3601608150c",
+      "role": "models",
+      "name": "OdiaSLM-100M-Instruct",
+      "status": "researched",
+      "updated_at": "2026-11-14T15:22:21+08:00",
+      "file": "models_fa7caf6cf624a3601608150c.md"
+    },
+    {
+      "entity_id": "models_fc6fad026f4f3a085b31b8fb",
+      "role": "models",
+      "name": "granite-4.1-30b-base",
+      "status": "researched",
+      "updated_at": "2026-11-15T17:59:14+08:00",
+      "file": "models_fc6fad026f4f3a085b31b8fb.md"
+    },
+    {
+      "entity_id": "models_fd0e171eef61972f816c9395",
+      "role": "models",
+      "name": "Sapiens2-1B-4K 预训练骨干",
+      "status": "researched",
+      "updated_at": "2026-11-15T18:44:40+08:00",
+      "file": "models_fd0e171eef61972f816c9395.md"
+    }
+  ],
+  "files": {
+    "models_01ab863cfb223221eca018ef.md": "85393f3863d4c4f61549dc67434369dab35dbd4a33f8fedc1cfa2313e18eb400",
+    "models_041870b996b1015292deba47.md": "619ed140cd5dd26d7f2e04dcdaa70f4dfdceaefc1dbb74189b8bab1f40041cc8",
+    "models_09292fd08b8a621cb8bc2ef3.md": "5376fa3375c044173431b66973ed88d7fbfda9634a33295c121543a764010968",
+    "models_0baef1f46de51128e82f6957.md": "65323f346f0ef19547c312cdaf2ebd9ecaff1fb43771637c5389fc8658b4d2f9",
+    "models_0ff41544dd4ef48633260a82.md": "b52e96ff31c460914c4f4d0385af9d862cb28788baeecd43e2c0103abf77b41e",
+    "models_11272dbc036a20a21ef09e4d.md": "79c0565b5e24bf3fb294e3c67fe219663b08f19277a8b5d586c84d5505094688",
+    "models_1210e3cf3f51ded644c573c3.md": "d473a2d1942f0675df3ec45d063ba64eafef216c2f7f2bed9dd0dd5b641ae08e",
+    "models_131417939f1a45de656a746c.md": "2bacbf05ad0eaaee6a3bb35c65a74b33ef8f7cd8848383b4111502b39e1525ad",
+    "models_19dc13049aedb84e603a473f.md": "22995e8ec2ebef82e67268a761b2be18dcb1686504ed7c51b0959ed751b7335f",
+    "models_1b2a221f1793e951c509628b.md": "a775a202912cefeee1eb4ce4ab67184a1c5e8b7d9fd505bcedd8f293eda9b2d1",
+    "models_2529466bbb0ded5111226ec3.md": "80516d8bf3408d58107186ad55640935b00c2685d70dab9689e53f0456769c4a",
+    "models_29bdeba1a8d616b50e498084.md": "a80beb9a69071a45d64532d67e7132859f3db2993daa6a35636677328b1df913",
+    "models_2e5da6e4d652f8b5c18d479e.md": "2bde80697e7ddf7c103f6fc7f70a0eb9b76d937e73cd31c74adfced3e715e1b7",
+    "models_2e79989b934dd75e7cf77ebd.md": "f15fc0f578404fb114f91e8dd7c885fefe0c04855e8d95cc4eeed788bd0856fa",
+    "models_2fab82918289d75a2de028af.md": "1e2c155439301426c0cbce436d2eb32f69460296c1b04edb6e6c642ebd700376",
+    "models_33904a1d3b3cd402c522570b.md": "68daea0cb50a1eee2b79252bd24d81f03c67b8a057f3cc7822022bccef92c020",
+    "models_38523cd3a19d51796112a9be.md": "a4bc91ce93a2121474234e11655502566ef7f3ca5b1f0b3c50558b4c59401a1a",
+    "models_3a35272d244b40a2e050a40f.md": "9b4bebf7666a4dd6100b4e87ce78509d6d5b8c7fb232170c6ac78e525850ddbb",
+    "models_41370e04530d55be9be774eb.md": "8ce8f5aca71f542096980b14ae6de494e6ce117d133e4efcffa422528b3ca0ac",
+    "models_4291f29ae8addb04d996481d.md": "a050d4098405e5b44ed23f6e64ec3bf0593ce33033d9522ca268d5d91098c789",
+    "models_42cad9b604e84fc24c1f2d5f.md": "5486d0e2074706eabf03dd8609fd1275d8508be7e311da4d358586d7bf51d3cc",
+    "models_438991a03201af1b2bbd6987.md": "d2c7afd9333ed2c922e1f5a1f23ae146cb55b5eae56e4e9143d7448ef0517089",
+    "models_4418b19283d15232b687ff5c.md": "39ff2dfc8769ea3ac1716b06137dc2b1908cdc7623773fd06cdeb267ecb68941",
+    "models_4a7920ddcdf0a674d57b685d.md": "67d1ae8482ebec85cfa3c77e04f584624c7650ab3daa9badb2e52b3ad5620cdc",
+    "models_4db130bd4ad96037a27e0b8e.md": "f0015ba855d782851c61d1183a36615f06c1692919d5b313dc84455cf3460264",
+    "models_516b30c8059b8a544caa668e.md": "729c417262e04b095826b1b1c26adfc9ef88d1c14949ab5bab242688ec3f647f",
+    "models_51b0baf8bf573866cdecbcab.md": "e5911f78ec95dfde531a54af404edcb0a987773d5f271f796604dd016ce6def0",
+    "models_573268f2efe5f85166198b3e.md": "a67fd7de330946fa5947f4956928b7755f3dfe673e7bc6d0824fc4fbec33b1c9",
+    "models_57b583574ee082d93c5ddf23.md": "3b3fd1e19e2c28fd7c5f14117e3350b50000e2fb1919f28e618bc67c380d7330",
+    "models_5e8537186d1ca726cba065af.md": "e1885900f26e30f3c51d28c0b12080b4e2630af35979722996960f6957168e5d",
+    "models_5e8b3ea0d2914b186793eda0.md": "ee80d3aff78d928644019859e72ad761314a205b1f232b6580fd7cafa084c5a2",
+    "models_636ab4547dc47f435ed43846.md": "c6266dd6186cf05d5079b8bd97421b9872c67244356f61af4b5ac66557f68019",
+    "models_68b58ac4e6e04e4b24571454.md": "ba283d23c8ff2f418e69131c60b0e8c06f185d2936a8ff8ee36510c12ee969b7",
+    "models_6e15fbbf24f12317f35cf212.md": "848d113801d69068addc246a6a6fdae9d6dae8eb72100cfa774ca33349bb825d",
+    "models_72ab4f6c05aba887be9ffde3.md": "bc767c33f273b1fe919c1bcd9c07bb00908199ec1f63ab66d0c07ffc43301adc",
+    "models_74e3da8ebacfacfe66e2928d.md": "015151f1902019ca7fc8ebc6a54dd10aa18a46cebcab93230898a1e420151c4f",
+    "models_75af962383b028fbac8af528.md": "f1f85f3304abdba33b08e14c5b2c94e8c718c74e437ddbf9b527b76017e64fdb",
+    "models_76451f54131d9fe4dfee35c9.md": "d0d16b07ca3db420ee47dcbda0fbec5af4febed9738d87dfb033f42874d5ec1d",
+    "models_78e46f533df5394c7830b07b.md": "c2db1c2597e047e923345350b10a1011883e2e9a5cab35be7845973a2d626ff4",
+    "models_7cad1bd68a71e358fb948a15.md": "14e7841adcb7ee7c50049b2f24a566f63018992ce8d5bcf2cd4b5958132eac91",
+    "models_808a6b62bb710f3b5de54365.md": "b70aefc9dd1dc8140595ab4f33fa04113c54d8ee226aa21cce8c5c4eba3f19e7",
+    "models_8432c527761796b1c6ea394a.md": "d960d30295e29b165685c37e65b46bd1362febc3881aa84f2213c5a6810035c2",
+    "models_86cbb8c2f5305938e63a697f.md": "7bd1d0a0b7e3ddd4d64921a65dea9a9dea82da760a906dfa967255c87b30d962",
+    "models_871d1caf39483922442814ec.md": "1fcb04b08a4eda51c71ecf08c3e0b2f0972dc01a10cd138024c963419a890ef7",
+    "models_884630bdf4a3a458b774ab43.md": "ac19420e17be3924afae4ec289f1cfa3414df0ae38aa9fa0bd569de748b4ffbd",
+    "models_89c4e3d028fa5c4018b8cc19.md": "ff9d7bdd9b9b291beb2ded110a012fd83760d606d0151fc2bdb6cb59ae3bb0f5",
+    "models_8a36535396872d48583e96dc.md": "2f1a7ed9367a48f927a89e0c31dfd3b9704828f97d49e14858a6bc6c948872e9",
+    "models_8a6ecce684cd16077ab4f72a.md": "9060ee3d6e9fac73a1d71670f41ea3c08246d52ebd56daf25bf689ccaa2b2d90",
+    "models_8c238e11ad5ac41a8e74768e.md": "69fc29c543e1760b13a6064d418ff744e675687a29d8d0d2af5daf3d19694020",
+    "models_8e5a9acc1f101cd198e53b89.md": "7c637c08c4fdf426ff2186652ce86f6eebd5c41e0cd4624033278555cadd8456",
+    "models_8f31b43a424c1f4656312b67.md": "73e501ff02678e48026a02681b4b9ba4ecb9310d80b291405178cfd48fd490e0",
+    "models_921e21c3f10a4d985d8901ca.md": "679386e6c5db80d5cbc62c550a6779cc149f2abc205736e30c49580a3d606813",
+    "models_94513f80cb99000abb095def.md": "1177340cda04467ba91f44b52823baf8f90b75bb934b738ea4b39010d6a087c5",
+    "models_95810ba4e3ee6041bfef4b5b.md": "e9b20ebb55e3dfdd3096c469e8058ba05f207f16ed7d00b8ca474d58011eed92",
+    "models_95d3f6b647ee25629edf7479.md": "c2378b2aa5f0f2b2d6d85ee754aa1bc4da710cb4ac64a677cd198422dc80ba24",
+    "models_97954727dad9bf810369ed06.md": "ac1031b80e309baa4b7df6bed835ff60d9b0dfb36e8313b6961c91c57cb072c7",
+    "models_99d97c64aba3066bb62ad5c5.md": "27688ee668f6defc6e6f7400c8f5af75dc75deb3521b41e69237c3b7e366932a",
+    "models_9a3753adee02a542099d73fc.md": "b8ead5282ec5d8710927b3f4e7457fccf231868e29090f1405e54c288360bca6",
+    "models_9caabcc0c6d4b93785229e74.md": "b3e72470c343253c786838f8fffe215273adae44b73367efded664d560650bc0",
+    "models_9d6348a7a2425452a89209f2.md": "a1089fa117d81c337233e20c86a7690efedfe49216c2739ee5524ce9bf9b7277",
+    "models_a2268c68d38b2b4bca54433f.md": "86319f1682cdeb7a46ee7d601259b80ad385f02812a858bb87b5c8f1cd93353f",
+    "models_a3a940225cb76be3a988f54c.md": "ea1a1c5c2d56dc5656c61e36557d5c000ecd5cd63572b979b853a4817f8c3206",
+    "models_a53ef681c541ed421d299077.md": "f6dd2423427adb38b920b5c9a6983eaf72fa78c12834c517a2b1fcc498e99ef0",
+    "models_a59d5c6c1a566dc1cad1c1e1.md": "ffcf21c5f2f5a2ce70325c82853be469034c71cdf64385d6464564ac1f9bbac4",
+    "models_a9d20d28ed99a0e83ab20a76.md": "4a1470330856820192bb8359140ee4f60ad994146293818f730941c3831891a5",
+    "models_ab68e7bad92ef6f26e64dc75.md": "b8b4f20e680dee926ff4f15bdde61f95a26ed95cb4c44b94bb8a121dbb71fecc",
+    "models_aee6a0e321bd955e659dd938.md": "a87aca9b4b5caf1689982ccf203c23039ae9ab96f24ebeb5b3e1cbd3b0aea820",
+    "models_af5150fb5bc018523dbb41d6.md": "f2fb1b63f1ebb30d2cb70a3111cd46fd4243241c4f9efadb5bcbd208f6a4dcf0",
+    "models_b17b430bfe457672194a0029.md": "81569fba78342f309100e8d55d469862007ac3d82efa603d850d2e8d7ff02857",
+    "models_b2064eff0d642dca118504fe.md": "69ec472f24db264f711c322281cde517ba1c8ab9c5a35a75e5511e008071e331",
+    "models_b351434f5c8661cc8b4cd306.md": "0740e1b0ee7dff8e227221c971a75adc1fcda02bd1dfd28e02dd8eb6770e6d37",
+    "models_b74b2ba1c821156750789372.md": "98f7ebf74d75146ea748b83be1864a33aea69154c26b4b1d399afba4f0c68e31",
+    "models_ba6ae42865a510a471625556.md": "e37b8a3d6028cd56c2edc9c5c281cc13dced3baba1dc931adbc6c016f137e08a",
+    "models_ba793a0821eba9f2e8f2ba9b.md": "f3183b95332f3f8243fd05663b875e8240b2450ca82037149b65f33e62dc8ea1",
+    "models_bb92bb9c6940eb5941cb8cee.md": "977a1d067279b38ec7437dba1fa982a0c5c6340f3f4381a1d27c9726769e0f7d",
+    "models_bc29c25876ed47f2301e31c8.md": "95c951538b07c1c4b57ec89818cedce8b1bfef9e29d1e0d5b87fc3c0b6b1a8f4",
+    "models_be6de73c483b100e617c00b0.md": "844643f1e95ec198ae4dd84502bf440eb627422d09594f11e0a0a1eeef3100e7",
+    "models_c25a638045b9e6e8968cfac9.md": "dcf3f42764804b721ac645c82f0fa4d6d748257ee4ecefb102f89da0e1557468",
+    "models_c70e1ad0035b48f2a0d71128.md": "8db2d664250629ba21c5c30b3714dbe25989f33d31c77294affcec726d93db55",
+    "models_cd8facaf5232918dc1a42ecd.md": "586cc526008c5e7ab470bd01456b1a2819679f2b19a6c35b35b3909fee741483",
+    "models_d105ff35f1a9353655cd87a8.md": "5dd530cfb416941b40725fddc71ae4411a40b7d333f103db880a489cc9f38d12",
+    "models_d5281d60ed35dbbd50790802.md": "2aade14d9e958d278b6db002b370c7e95872ce60ed2a9a8952e98ae20cc21a51",
+    "models_d76c1587ca918e0941086a82.md": "4b609813f50cc63490402d06c616c82645d198274b60e34feef929b9a0f20ad6",
+    "models_d7d4e86da7e4e8cd180a47d4.md": "ef610a4f9416b1d8db806f359b2de9e2d7cc0c7083dce975628cc3708c3abd03",
+    "models_dbe9985d7bc31a549e0de262.md": "a5ac59bb4a6a8d597d862a78c03b74b357506ba1f631ee81d42d5e82659f14db",
+    "models_dd1aeb6d85fa44c9777ccd88.md": "991e288fffcca309c62efba3297f6ffdc60a1811c31f8257212ff72ec3cd077d",
+    "models_e31896653df474a120bbc767.md": "686934eaff3b1160dd0eb4054285bfd055ba38ba8a9dfdb6a27b14b66a92ce16",
+    "models_e42d343276f18a79e2c334da.md": "67e64fd0944fddc3d8146e0e9e0f8ed9a011dd41b8362ffeb3f68b1d20d0f592",
+    "models_e6e595c2c70b4b83dca818a1.md": "3b04ef378ed6b167cc99e6ef2ad2ec0ed2c31ec2da8d20945a6e52028f3f5d68",
+    "models_e847d415eeb97387c0e5734f.md": "95d7cd4125cb3471c6075225e1cfb2744721a75583d5ad00240fb1941431f8fd",
+    "models_ee215506100f88a7979fc855.md": "79e7ea95213f0bb9fe95ff96de28eb3ad692885630d2a8c5997027d0d296be8c",
+    "models_f062f53c4438167cfc76d8c8.md": "ea7edfc00c9adee57b4f6380531556658c39afdd7311cf05bca8779a9d3c0cc0",
+    "models_f2de63fd9e92d43b7caa9adf.md": "9c1f36a6c6f6a339cd626b2e04fb22b8c980323b9397e96f865fe081b4e8c775",
+    "models_f3a4b50eddf0c352b01a762f.md": "c4ad7d48446504444ffa84eb54b8774b48594661bcd9a90395eadfa364b9b044",
+    "models_f61f900ea999167e13cfed97.md": "805e7752d32d04e28ba8bb8c91d2ed32d867e5e3b912c7b72f451e47585eba8a",
+    "models_f735ca43bd30c5b8751a442c.md": "2beb4d2122b750142735028ebc398618136dcd7d053bee642a0c24bf987be7b2",
+    "models_fa7caf6cf624a3601608150c.md": "02462efcd18f109477b12f68ecfd70392cb45c65df59a65e0a1aba8c49d48831",
+    "models_fc6fad026f4f3a085b31b8fb.md": "279d7101d146a61eb1b42b82655484778a3a5c6ce198bd4ad357ee92bfcce156",
+    "models_fd0e171eef61972f816c9395.md": "2a182e981a6afc97a00e2fe7a5de6370cba7efb020548affcf12dfe17b4b5236",
+    "README.md": "d157b7aaee22d2f81c6a6c2f73739a72f6a0254b458b46d3beac005ae1d78f1b"
+  }
+}

@@ -1,7 +1,9 @@
 ---
 {
   "schema_version": 1,
+  "document_layout_version": 2,
   "entity_id": "REPLACE_GENERATED_ENTITY_ID",
+  "display_name": "REPLACE_MODEL_NAME",
   "role": "models",
   "identity": [],
   "source_batches": [],
@@ -9,24 +11,12 @@
 }
 ---
 
-# 资料档案
+# REPLACE_MODEL_NAME
 
-## 结论与适用范围
+## 输入资料（未核验）
 
-区分来源陈述、第三方报告、推断和待核实项。
+保存上游原始字段，不把CSV输入视为本程序已核实的结论。
 
-## 官方资料与证据
+## 人工笔记
 
-通过 candidates 导入证据，不从空白模板或 CSV 反推官方结论。
-
-## 评测条件与可比性
-
-记录模型与Benchmark版本、推理模式、工具/Agent框架及指标口径。
-
-## 衍生关系、社区反馈与 Issue
-
-区分量化、转换和训练衍生；保留来源和问题状态。
-
-## 冲突与待核实
-
-记录未知和冲突，不把没有成绩写成零。
+此处可人工记录；实际研究正文由带证据的dossiers报告生成，模板不冒充已完成研究。

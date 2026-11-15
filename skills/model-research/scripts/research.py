@@ -84,10 +84,12 @@ def adopt(cfg, state, backend, batch_id, entity_id, record_id):
 def parser():
     result = argparse.ArgumentParser(description=__doc__)
     subs = result.add_subparsers(dest='command', required=True)
-    for name in ('doctor', 'inspect', 'ingest', 'plan', 'apply', 'verify', 'resume', 'run', 'import-candidates', 'adopt', 'resolve-identity'):
+    for name in ('doctor', 'inspect', 'ingest', 'plan', 'apply', 'verify', 'resume', 'run', 'research', 'finalize-md', 'export-md', 'import-candidates', 'adopt', 'resolve-identity'):
         sub = subs.add_parser(name)
         sub.add_argument('--config', required=True)
-        if name in ('ingest', 'run'):
+        if name == 'export-md':
+            sub.add_argument('--output', required=True)
+        if name in ('ingest', 'run', 'research'):
             sub.add_argument('--date', required=True)
             sub.add_argument('--manifest')
         if name in ('plan', 'import-candidates', 'adopt'):
@@ -124,6 +126,9 @@ def main(argv=None):
     backend = adapter_for(cfg)
     try:
         with state.lock():
+            if args.command in ('finalize-md', 'export-md'):
+                import markdown_delivery
+                return markdown_delivery.finalize(state) if args.command == 'finalize-md' else markdown_delivery.export(state, args.output)
             if args.command == 'doctor':
                 result = backend.doctor()
                 result.update(state_dir=str(state.root), allow_writes=cfg.get('allow_writes', False))
@@ -152,8 +157,13 @@ def main(argv=None):
                     path = Path(args.plan).resolve()
                 document = read_json(path)
                 return sync.apply(cfg, state, document, backend, verify_only=args.command == 'verify')
-            if args.command in ('ingest', 'run'):
+            if args.command in ('ingest', 'run', 'research'):
+                if args.command == 'research' and cfg.get('allow_writes', False):
+                    raise ResearchError('independent research requires allow_writes=false')
                 batch = ingest(cfg, state, args.date, backend if isinstance(backend, LarkAdapter) else None, args.manifest)
+                if args.command == 'research':
+                    import research_pipeline
+                    return research_pipeline.execute(cfg, state, batch)
                 prepare_dossiers(state, batch)
                 write_index(state)
                 if args.command == 'ingest':

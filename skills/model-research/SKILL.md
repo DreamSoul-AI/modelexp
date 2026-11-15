@@ -2,7 +2,7 @@
 name: model-research
 description: 接收模型、Benchmark 与渠道 CSV，核验来源、整理 Markdown 证据和量化/训练衍生关系，生成并在授权范围内执行飞书增量同步。用户要求处理 Grokbot 日报、模型资料补全、渠道维护或恢复同步时使用；实际跑分与训练另按实验流程。
 metadata:
-  version: "0.4.1"
+  version: "0.6.0"
 ---
 
 # 模型调研与资料同步
@@ -17,7 +17,7 @@ metadata:
 
 ## 一批工作
 
-当前用户已明确以Grokbot交付CSV为准直接同步：不重新调研、不依赖Codex登录或MD正文。对已授权字段设置accept_upstream/prefer_upstream，先统一列映射、明确别名和多选格式，再批量提交并回读；研究候选仅用于用户另行要求的补充调研。普通CSV同步不以研究作业完成为前提。allow_new_options只允许显式配置的单选字段追加CSV标签，保留已有选项、类型和配置。
+当前采用两条独立任务：Grokbot CSV直接同步到表格；AI增量调研并撰写MD正文。CSV任务不等待研究完成；对已授权字段设置accept_upstream/prefer_upstream，先统一列映射、明确别名和多选格式，再批量提交并回读；AI调研使用独立配置、状态目录、进程和调度。普通CSV同步不以研究作业完成为前提。allow_new_options只允许显式配置的单选字段追加CSV标签，保留已有选项、类型和配置。
 
 1. 用 ingest 显式指定业务日。保留原始CSV的内容哈希和版本，model/benchmark为日报、channel为独立快照；缺文件和无生产方完成声明分别记录。source_links/backfill保持禁用。
 2. 读取 [实体和字段](references/entities-and-fields.md)，核对内部实体、来源身份与record_id。渠道ID跨批可能重编，名称不能单独作跨批主键。身份缺失/歧义保留待处理项。
@@ -39,3 +39,15 @@ metadata:
 后台 Codex 适配器见 scripts/codex_agent.py：脚本先实际下载限定范围的公开模型卡/README，保存内容指纹、片段和读取范围，再让独立登录的Codex输出结构化结果。每轮默认3个实体；同输入复用成功回执，失败退避、待核实项延后复查。来源陈述不当作实测，当前适配器不声称已遍历社区或完成全部Benchmark。
 
 自动写回：默认不删除、不清空、不改表结构和评分规则；旧记录无已验证基线的非空值保留，空值可按bootstrap_empty补齐，程序维护值用三方比较更新。新增须同时通过完整身份、名称/别名及不完整历史记录的来源冲突检查。上游无manifest时可配置stable_observations，至少两次内容一致且间隔达到阈值才能写回；这只证明观察窗口内稳定，不冒充生产方完整声明。
+
+## 独立AI调研与Markdown
+
+使用research.py research --config <独立研究配置> --date <业务日>，要求allow_writes=false；该入口仅读取CSV/来源并写本地证据与正文，不调用表格plan/apply。agent.roles限定研究对象；include_previous_batches=true接续本研究状态目录中旧业务日的未完成项，最新同身份输入优先，当天任务先处理。此机制不读取被排除的backfill文件。
+
+用service.py --root <独立研究运行目录> install --config <研究配置> --mode research --at 12:00 --retry-until 23:59 --continue-after-minutes 1部署；研究state_dir不能与CSV状态共用，避免模型调用长时间持锁阻塞CSV。两项每天12:00启动，CSV保留18:00前重试，研究队列在独立窗口继续接续。恢复新实例时分别核对两项manage status/start；暂停实例无法依靠这两个进程自行唤醒。
+
+## Markdown交付与服务器迁移
+
+finalize-md --config <研究配置>只清理完全匹配的旧模板占位区，保留原CSV和人工扩展，并备份原文件；不修改生成段内容或其指纹。export-md --config <研究配置> --output <独立目录>导出带来源的生成正文和索引，不含程序元信息、原CSV、人工笔记或凭据。无研究正文不导出；导出文件被人工修改时拒绝覆盖。
+
+Linux常驻部署使用 [服务器迁移指南](references/server-deployment.md) 与deploy/model-research@.service；新主机上线前核对状态迁移、两项授权、历史队列、真实回读及重启恢复。Git中的报告是显式导出快照，后台不会自行commit/push；私有迁移包不得提交Git。

@@ -7,7 +7,7 @@ from urllib.parse import urlsplit
 
 from common import ResearchError, atomic_write, digest, now, read_json, write_json
 from identity import identity
-from dossiers import merge_report, validate_report, write_index
+from dossiers import display_title, merge_report, validate_report, write_index
 
 
 def dossier_path(state, entity):
@@ -49,9 +49,10 @@ def prepare_dossiers(state, batch):
             meta = {'schema_version': 1, 'entity_id': item['entity_id'], 'role': item['role'],
                     'identity': item['identity'], 'source_batches': [batch['batch_id']], 'controlled_fields': {}}
             meta['display_name'] = item['raw_fields'].get('name') or item['entity_id']
-            body = '\n# 资料档案\n\n## 结论与适用范围\n\n待查证；上游 CSV 信息不是已核实结论。\n\n'
+            meta['document_layout_version'] = 2
+            body = '\n# ' + display_title(meta) + '\n\n'
             body += '## 输入资料（未核验）\n\n```json\n' + json.dumps(item['raw_fields'], ensure_ascii=False, indent=2) + '\n```\n\n'
-            body += '## 评测条件与可比性\n\n待补。\n\n## 衍生关系、社区反馈与 Issue\n\n待补。\n\n## 冲突与待核实\n\n保留未知信息，不从缺失推导为零。\n'
+            body += '## 人工笔记\n'
             save_dossier(path, meta, body)
 
 

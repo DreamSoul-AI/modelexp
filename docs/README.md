@@ -1,6 +1,6 @@
 # Model 调研自动化文档
 
-`gyd`分支当前已实现Grokbot成品CSV直接同步：字段映射、格式统一、按表批量写入和回读；日常不再重新调研，不依赖Codex或MD正文。此前调研和自动写回版本保留为历史记录，长期无人值守继续验收。
+`gyd`分支当前已实现Grokbot成品CSV直接同步：字段映射、格式统一、按表批量写入和回读；日常不再重新调研，不依赖Codex或MD正文。AI调研和MD已恢复为独立服务；早期版本保留为历史记录，长期无人值守继续验收。
 
 - [使用指南](../skills/model-research/README.md)及[Skill 入口](../skills/model-research/SKILL.md)
 - [首版开发记录](<开发记录 Development Record/2026-11-14 自动化首版实现.md>)
@@ -20,6 +20,14 @@
 首版以 Grokbot CSV 接收为起点，复用模型评测、Benchmark、衍生产物与渠道四张表。当前渠道为按平台汇总的 14 条；source_links/backfill 暂不处理。当前命令与配置见使用指南；更多渠道adapter和评分重算仍属后续范围，稳定观察和调度已实现。
 
 ## 当前云环境部署
+
+- [收尾交付与迁移记录](<运行记录 Run Record/2026-11-15 Markdown定稿与服务器交付.md>)：报告快照、私有迁移包及服务器验收范围。
+- [研究报告阅读快照](../reports/model-research/README.md)与[服务器迁移指南](../skills/model-research/references/server-deployment.md)。
+
+- [独立调研与MD恢复](<运行记录 Run Record/2026-11-15 独立调研与MD恢复.md>)：两条服务独立运行、首批真实正文和剩余队列。
+- [独立AI调研实现](<开发记录 Development Record/2026-11-15 独立AI调研与MD.md>)：只研究入口、跨日接续及锁隔离。
+
+- [环境切换与定时恢复](<运行记录 Run Record/2026-11-15 环境切换与定时恢复.md>)：新实例丢失后台进程的原因、当天补跑及持续运行边界。
 
 当前每天北京时间12:00启动CSV同步，18:00前按原有规则重试；最新调整见CSV直接同步运行记录。
 

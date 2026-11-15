@@ -50,7 +50,7 @@ See `requirements.txt`
 
 ## Model 调研自动化（gyd）
 
-此分支实现了模型调研自动化首版 skill 和 Python CLI：CSV 接收、证据档案、字段增量计划、人工修改保护及中断恢复。Python 3.11+ 标准库即可运行；当前云环境按用户要求直接同步Grokbot成品CSV：统一字段格式后批量写入、回读，并保护人工字段及评分规则；后台Codex与MD研究保留为可选能力，日常同步不依赖它们。详情见使用指南。
+此分支实现了模型调研自动化首版 skill 和 Python CLI：CSV 接收、证据档案、字段增量计划、人工修改保护及中断恢复。Python 3.11+ 标准库即可运行；当前云环境按用户要求直接同步Grokbot成品CSV：统一字段格式后批量写入、回读，并保护人工字段及评分规则；后台Codex调研与MD正文由独立任务执行，日常CSV同步不等待研究完成。详情见使用指南。
 
 - [Skill 与使用指南](skills/model-research/README.md)
 - [Agent 操作入口](skills/model-research/SKILL.md)
@@ -61,3 +61,6 @@ See `requirements.txt`
 - [开发计划](<docs/开发计划 Development Plan 模型调研自动化.md>)
 
 项目已安装的外部技能由 `skills-lock.json` 记录，本地目录 `.agents/skills/` 不随源码提交。恢复安装与模板采用范围见文档导航中的技能与环境记录；技能安装不代表飞书授权或定时任务部署完成。
+
+- [已生成的研究报告快照](reports/model-research/README.md)
+- [服务器迁移与常驻运行](skills/model-research/references/server-deployment.md)

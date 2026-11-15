@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install a fixed local release and supervise configured daily plan/apply runs."""
+"""Install a fixed local release and supervise independent CSV or Markdown research runs."""
 import argparse
 from contextlib import contextmanager
 from datetime import datetime, time, timedelta
@@ -51,7 +51,9 @@ def install(root, config, at='15:00', retry_minutes=30, retry_until='18:00', mod
     cfg = load_config(config)
     if mode == 'plan' and cfg.get('allow_writes', False):
         raise ResearchError('this trial deployment requires allow_writes=false')
-    if mode not in ('plan', 'apply') or mode == 'apply' and not cfg.get('allow_writes', False):
+    if mode == 'research' and cfg.get('allow_writes', False):
+        raise ResearchError('research deployment requires allow_writes=false')
+    if mode not in ('plan', 'apply', 'research') or mode == 'apply' and not cfg.get('allow_writes', False):
         raise ResearchError('apply deployment requires allow_writes=true')
     time.fromisoformat(at)
     time.fromisoformat(retry_until)
@@ -139,14 +141,19 @@ def tick(root, business_date=None):
     cfg = load_config(settings['config'])
     if settings['mode'] == 'plan' and cfg.get('allow_writes', False):
         raise ResearchError('trial service refuses a write-enabled configuration')
-    if settings['mode'] not in ('plan', 'apply') or settings['mode'] == 'apply' and not cfg.get('allow_writes', False):
+    if settings['mode'] == 'research' and cfg.get('allow_writes', False):
+        raise ResearchError('research service refuses a write-enabled configuration')
+    if settings['mode'] not in ('plan', 'apply', 'research') or settings['mode'] == 'apply' and not cfg.get('allow_writes', False):
         raise ResearchError('deployment mode and write configuration disagree')
     business_date = business_date or datetime.now(TZ).date().isoformat()
     report = {'started_at': now(), 'business_date': business_date, 'mode': settings['mode'],
               'source_sha256': settings['source_sha256'], 'research_runtime': research_runtime(cfg)}
     with exclusive(root / 'tick.lock'):
         script = Path(settings['release']) / 'skills/model-research/scripts/research.py'
-        command = [settings['python'], str(script), 'run', '--config', settings['config'], '--date', business_date, '--mode', settings['mode']]
+        command = [settings['python'], str(script), 'research' if settings['mode'] == 'research' else 'run',
+                   '--config', settings['config'], '--date', business_date]
+        if settings['mode'] != 'research':
+            command += ['--mode', settings['mode']]
         try:
             timeout = max(240, cfg.get('agent', {}).get('timeout_seconds', 180) + 60)
             result = run_process(command, timeout=timeout)
@@ -225,6 +232,8 @@ def start(root):
     cfg = load_config(settings['config'])
     if settings['mode'] == 'plan' and cfg.get('allow_writes', False):
         raise ResearchError('trial service refuses a write-enabled configuration')
+    if settings['mode'] == 'research' and cfg.get('allow_writes', False):
+        raise ResearchError('research service refuses a write-enabled configuration')
     if settings['mode'] == 'apply' and not cfg.get('allow_writes', False):
         raise ResearchError('apply deployment requires allow_writes=true')
     script = Path(settings['release']) / 'skills/model-research/scripts/service.py'
@@ -264,7 +273,7 @@ def main():
     install_parser.add_argument('--at', default='15:00')
     install_parser.add_argument('--retry-until', default='18:00')
     install_parser.add_argument('--retry-minutes', type=int, default=30)
-    install_parser.add_argument('--mode', choices=('plan', 'apply'), default='plan')
+    install_parser.add_argument('--mode', choices=('plan', 'apply', 'research'), default='plan')
     install_parser.add_argument('--continue-after-minutes', type=int)
     for command in ('start', 'stop', 'status', 'daemon'):
         commands.add_parser(command)

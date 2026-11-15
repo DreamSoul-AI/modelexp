@@ -1,6 +1,6 @@
 # 模型调研自动化代码结构设计
 
-版本：v0.4.1 · 状态：以下为首版已实现结构，真实自动写回已联调，长期无人值守仍待验收。依据 [架构设计](<架构设计 Architecture Design 模型调研自动化.md>) 划分职责，不改现有 `src/` 训练代码。
+版本：v0.6 · 状态：以下为首版已实现结构，真实自动写回已联调，长期无人值守仍待验收。依据 [架构设计](<架构设计 Architecture Design 模型调研自动化.md>) 划分职责，不改现有 `src/` 训练代码。
 
 ## 实现目录与职责
 
@@ -119,3 +119,11 @@ python skills/model-research/tests/run_tests.py --output /tmp/model-research-res
 ## 当前CSV直接路径
 
 research.run → ingest → CSV字段映射/格式统一 → sync.plan → submit_batches → lark批量记录接口 → 全部目标回读。allow_new_options只对配置允许的单选标签追加，实时选项分页补齐；模型链接列只写入规范URL。后台研究及MD保留为可选模块，日常CSV处理不调用agent_runner。
+
+## 独立研究入口
+
+research.py research → research_pipeline.workset → agent_runner → 有证据的MD正文。状态目录、SQLite及进程与CSV分开，不调用sync.plan/apply，也不维护下拉选项。工作集合合并同配置下保留的正常日报，按实体保留最新输入并优先当天，复用成功研究回执。service mode增加research，其配置必须禁用远端写入。
+
+## 阅读交付
+
+markdown_delivery.finalize清理完全匹配的旧占位章节并备份，保留生成段指纹、原输入和人工扩写；export导出经过指纹检查的AI正文，拒绝覆盖人工修改过的快照。reports/model-research存储本次阅读快照，私有运行数据及认证不进入Git。deploy/model-research@.service和服务器指南定义目标目录及开机恢复方式，新服务器行为须另验收。

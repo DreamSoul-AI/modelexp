@@ -47,3 +47,9 @@ state_dir/research/jobs按实体、输入内容与workflow_version保存工作ID
 当前用户要求直接采用Grokbot已经整理的CSV：下载并固定原件、按field_id匹配列、统一明确别名/下拉/URL格式、生成增量计划、按表批量写入和回读。prefer_upstream使原CSV优先于早期调研候选；人工镜像在CSV未变时仍保留。日常同步不调用Codex、不等待MD正文。研究协议保留为另行需要时使用。
 
 backend.batch_size范围1—200，默认1；批量方式在提交前重新读取目标、校验每条记录的旧值及候选指纹。整组标记submitting后提交，回读按完整身份和服务返回ID确认，绝不假定返回ID顺序。回执丢失或读回不匹配时标记unknown，下次仅对账。
+
+## 分开的CSV与AI服务
+
+CSV服务使用mode=apply、Agent关闭；AI服务使用mode=research、allow_writes=false和独立状态目录。research模式直接执行研究入口，不经过同步计划及远端写入；配置后续打开allow_writes会被拒绝。每条任务自己的进程、锁、回执和MD保持独立。
+
+研究include_previous_batches只合并相同配置、日期不晚于当前日的最新ready原始批次，工作集合不递归合并自己；同实体取最新输入，当天优先。成功工作ID仍以实体/原始输入/workflow_version复用；更换业务日不丢弃未完成队列。研究可延长至23:59接续，CSV仍18:00截止；两项每日12:00启动。复制历史成果时保留证据和生成段指纹，不删除失败回执来重复调用模型。

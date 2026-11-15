@@ -85,7 +85,7 @@ python skills/model-research/scripts/service.py --root <仓外运行目录> inst
 
 运行目录保存 releases/current、私有 project.json（由部署方提供）、state、deployment.json、process.json、heartbeat.json、last-run.json、worker-results 和日志；源码副本与业务状态分开。默认plan部署保持只读；已授权的apply部署要求allow_writes=true并逐项回读。程序默认15:00开始；当前部署按用户要求在北京时间12:00开始、18:00前运行；当前有进展且有剩余时1分钟接续，空闲或退避时30分钟重查。渠道可用 latest_snapshot=true 复用最近已交付快照，模型与 Benchmark 仍严格取当天日报。
 
-当前实例按用户要求使用apply直接同步Grokbot CSV；日常同步不调用Codex，不等待Markdown调研。环境停止后服务可能停止，需要status核查并在必要时start；没有安装系统级自启动或发布共享环境。后台Codex和MD调研代码保留为另行使用的可选能力，早期部署经过见 [部署记录](<../../docs/运行记录 Run Record/2026-11-14 云环境试运行部署.md>)。
+当前实例按用户要求使用apply直接同步Grokbot CSV；日常同步不调用Codex，不等待Markdown调研。环境停止后服务可能停止，需要status核查并在必要时start；没有安装系统级自启动或发布共享环境。后台Codex和MD调研使用另一独立任务运行，早期部署经过见 [部署记录](<../../docs/运行记录 Run Record/2026-11-14 云环境试运行部署.md>)。
 
 
 ## 正文调研与接续
@@ -107,3 +107,32 @@ python skills/model-research/scripts/service.py --root <运行目录> install --
 同时配置allow_writes=true、具体AI字段与allow_create；不改变表结构或人工评分规则。无成功基线的既有非空值保留，空值可补，成功回读的程序字段后续用三方比较维护。上游没有完成manifest时可用间隔不少于60秒的两次相同内容观察；文件变化重新计时。未知提交先核验，不重复新增。
 
 当前CSV直接同步按整份日报生成计划，再按表、每批最多200条提交并回读；不再按每轮3个实体重新调研。当前部署的工作窗口为北京时间12:00—18:00，空闲时30分钟重查；跨日期未完成项可显式指定日期接续。早期调研写回证据见 [自动写回记录](<../../docs/运行记录 Run Record/2026-11-14 多维表格自动写回.md>)。
+
+## AI调研与MD独立运行
+
+CSV同步与AI调研分别部署。CSV配置保持Agent关闭，以成品CSV直接写表；研究配置打开Agent，allow_writes=false并使用独立state_dir，避免长模型调用阻塞CSV，也不把研究候选反写成品CSV字段。
+
+```text
+python skills/model-research/scripts/research.py research --config <独立研究配置> --date <业务日>
+python skills/model-research/scripts/service.py --root <独立研究目录> install --config <独立研究配置> --mode research --at 12:00 --retry-until 23:59 --continue-after-minutes 1
+<独立研究目录>/manage start
+```
+
+agent.roles只研究模型、Benchmark及配置的衍生产物；渠道仍直接同步。include_previous_batches=true合并本研究状态下历日未完成项，相同实体采用最新输入、当天优先，同内容成功结果复用。仍限定每轮max_entities_per_run并保存失败退避；未完成保持partial。旧日正常日报可用ingest --date纳入队列，不接入排除的backfill文件。
+
+AI正文位于独立研究state_dir/dossiers，含证据、范围和待核实项；CSV状态中的MD是同步元信息/输入归档，不作为AI完成证据。来源仅基于实际下载的有限材料，未读取的论文/Issue和实测不得写成已验证。两项只在运行实例在线时执行，新实例须恢复各自进程。
+
+## 最终阅读版与服务器交付
+
+- [研究报告快照](../../reports/model-research/README.md)：已生成正文的阅读版及来源，不含输入模板和私有元数据。
+- [Linux服务器迁移指南](references/server-deployment.md)：持久目录、CLI授权、旧队列接续、systemd及验收边界。
+- [systemd模板](deploy/model-research@.service)：开机启动与异常重启；每天12:00仍由程序内部调度。
+
+```text
+python skills/model-research/scripts/research.py finalize-md --config <研究配置>
+python skills/model-research/scripts/research.py export-md --config <研究配置> --output reports/model-research
+```
+
+私有档案已按名称标题、自动调研正文、原始输入、人工笔记组织；只删除完全匹配的旧占位区，保留人工扩展和原输入，并保存原文件备份。公开快照只取带有效指纹的AI生成正文，人工笔记不发布，未知/待核实状态如实展示。导出器保护已有人工作业，不自动覆盖修改过的导出文件。
+
+运行中的后续研究继续写私有state；本次Git报告是一次快照，不代表全部研究已完成，也不表示已实现每天自动推送报告。私有迁移包单独保存，包含CSV、数据库、基线、证据、MD和队列，不含CLI登录凭据。新服务器仍需授权与真实重启/定时验收。

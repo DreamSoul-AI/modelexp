@@ -8,6 +8,46 @@ BEGIN = '<!-- model-research:begin -->'
 END = '<!-- model-research:end -->'
 SECTIONS = {'summary': '结论与适用范围', 'evaluation': '评测条件与可比性',
             'derivatives': '衍生关系', 'issues': '社区反馈与 Issue', 'uncertainties': '冲突与待核实'}
+LEGACY_PLACEHOLDERS = {'结论与适用范围': '待查证；上游 CSV 信息不是已核实结论。',
+                       '评测条件与可比性': '待补。', '衍生关系、社区反馈与 Issue': '待补。',
+                       '冲突与待核实': '保留未知信息，不从缺失推导为零。'}
+
+
+def display_title(meta):
+    import html
+    return html.escape(re.sub(r'[\r\n]+', ' ', str(meta.get('display_name') or meta['entity_id'])).strip())
+
+
+def clean_layout(meta, body):
+    """Remove exact legacy boilerplate sections, preserving generated text and human additions."""
+    block = generated_block(body)
+    pieces = body.split(block, 1) if block is not None else [body]
+    cleaned = []
+    for piece in pieces:
+        lines = piece.splitlines(keepends=True)
+        headings, fence = [], None
+        for i, line in enumerate(lines):
+            marker = re.match(r'^\s*(`{3,}|~{3,})', line)
+            if marker:
+                run = marker[1]
+                if fence is None:
+                    fence = run
+                elif run[0] == fence[0] and len(run) >= len(fence):
+                    fence = None
+                continue
+            if fence is None and line.startswith('## '):
+                headings.append(i)
+        removed = set()
+        for pos, start in enumerate(headings):
+            end = headings[pos + 1] if pos + 1 < len(headings) else len(lines)
+            heading = lines[start][3:].strip()
+            content = ''.join(lines[start + 1:end]).strip()
+            if heading in LEGACY_PLACEHOLDERS and content == LEGACY_PLACEHOLDERS[heading]:
+                removed.update(range(start, end))
+        cleaned.append(''.join(line for i, line in enumerate(lines) if i not in removed))
+    result = block.join(cleaned) if block is not None else cleaned[0]
+    return re.sub(r'\A(\s*)# 资料档案[ \t]*(?=\n|$)',
+                  lambda match: match[1] + '# ' + display_title(meta), result, count=1)
 
 
 def generated_block(body):
@@ -89,7 +129,8 @@ def merge_report(state, item, batch, report, evidence, meta, body):
     meta['generated_block_sha256'] = digest(block)
     meta['research'] = {'status': report['status'], 'batch_id': batch['batch_id'], 'updated_at': now(),
                         'work_id': report.get('work_id')}
-    return meta, body, None
+    meta['document_layout_version'] = 2
+    return meta, clean_layout(meta, body), None
 
 
 def write_index(state):

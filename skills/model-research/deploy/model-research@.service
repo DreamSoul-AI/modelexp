@@ -1,0 +1,23 @@
+[Unit]
+Description=Model research automation (%i)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=modelresearch
+Group=modelresearch
+WorkingDirectory=/srv/model-research/%i
+Environment=PATH=/home/modelresearch/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONUNBUFFERED=1
+UMask=0077
+ExecStart=/usr/bin/python3 /srv/model-research/%i/current/skills/model-research/scripts/service.py --root /srv/model-research/%i daemon
+Restart=on-failure
+RestartSec=10
+KillMode=control-group
+TimeoutStopSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

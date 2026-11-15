@@ -52,3 +52,9 @@ sections每项包含key（summary/evaluation/derivatives/issues/uncertainties）
 ```
 
 程序写入由HTML注释标记的生成段，同时保存generated_block_sha256。生成段外的人工笔记保持原样；人工改动/删除生成段或旧研究结果晚到时，将新稿保存到conflicts/markdown并保留原文，不覆盖。结构化字段与正文报告可分别提供；正文不会被解析成任意写操作。dossiers/README.md是可阅读的档案和进度索引。
+
+## 布局定稿与阅读快照
+
+私有MD使用对象名称作一级标题，自动调研记录使用原受控生成段；原始CSV字段和人工笔记保留在段外。旧版“待补”仅在整个章节与系统占位文本完全一致时移除，人工扩写和代码围栏内示例不删除。finalize-md先保存原文件备份，生成段被人工修改时保留冲突，不改生成段指纹。
+
+export-md只导出已生成且指纹有效的研究正文，不复制front matter、原CSV或人工笔记，另生成README和带文件哈希的snapshot.json。pending输入模板不当作研究报告导出，needs_review仍标为待核实。导出目录不能位于私有state内，也不能覆盖已改过的报告或无关文件。快照不会自动回流为表格或研究事实，也不会由后台自动推送Git。
