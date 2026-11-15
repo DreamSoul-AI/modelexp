@@ -48,21 +48,12 @@ See `requirements.txt`
 ## Acknowledgements
 *Enmao Diao*
 
-## Model 调研自动化（gyd）
+## Model 资料与评测维护（gyd）
 
-此分支实现了模型调研自动化首版 skill 和 Python CLI：CSV 接收、证据档案、字段增量计划、人工修改保护及中断恢复。Python 3.11+ 标准库即可运行；当前云环境按用户要求直接同步Grokbot成品CSV：统一字段格式后批量写入、回读，并保护人工字段及评分规则；后台Codex调研与MD正文由独立任务执行，日常CSV同步不等待研究完成。详情见使用指南。
+此分支在原训练流程之外提供三个独立任务：Grokbot CSV 增量同步、只读字段/一致性校验、语言模型代码/Agent/数学评分维护。Markdown 由 Grokbot 管理，专项和基座单列；不生成正文、研究队列或每日摘要。
 
-- [Skill 与使用指南](skills/model-research/README.md)
-- [Agent 操作入口](skills/model-research/SKILL.md)
+- [使用指南](skills/model-research/README.md)与[Skill](skills/model-research/SKILL.md)
+- [文档导航](docs/README.md)与[项目约定](REPO.md)
+- [服务器部署与验收](skills/model-research/references/server-deployment.md)
 
-- [文档导航](docs/README.md)
-- [仓库协作约定](REPO.md)
-- [架构设计](<docs/架构设计 Architecture Design 模型调研自动化.md>)
-- [开发计划](<docs/开发计划 Development Plan 模型调研自动化.md>)
-
-项目已安装的外部技能由 `skills-lock.json` 记录，本地目录 `.agents/skills/` 不随源码提交。恢复安装与模板采用范围见文档导航中的技能与环境记录；技能安装不代表飞书授权或定时任务部署完成。
-
-- [已生成的研究报告快照](reports/model-research/README.md)
-- [服务器迁移与常驻运行](skills/model-research/references/server-deployment.md)
-
-当前自动化为 CSV 同步与只读表格校验，正文交给 Grokbot。旧 Codex 正文生成与研究队列已移除；[写作提示词](skills/model-research/assets/grokbot-md-prompt.txt)和[校验指南](skills/model-research/README.md)说明当前边界。
+真实配置、状态、资料和凭据均放仓外。历史方案及报告快照已从当前树清理，可通过 Git 和私有归档查阅。

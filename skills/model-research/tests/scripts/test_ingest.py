@@ -9,6 +9,17 @@ from ingest import ingest
 
 
 class IngestTests(Workspace):
+    @case(target='ingest.input_folder', tags=('grokbot', 'folders'))
+    def test_named_grokbot_subdirectories_resolve_without_recursing_backfill(self):
+        from ingest import input_folder
+        class Drive:
+            def list_files(self, folder):
+                return [{'type':'folder','name':'model','token':'models'},
+                        {'type':'folder','name':'md','token':'markdown'},
+                        {'type':'folder','name':'backfill','token':'old'}]
+        self.assertEqual(input_folder({'root_folder_token':'root','subdirectory':['model']},Drive()),'models')
+        with self.assertRaises(ResearchError):
+            input_folder({'root_folder_token':'root','subdirectory':['missing']},Drive())
     @case(target='ingest.ingest', tags=('idempotency',))
     def test_identical_csv_reuses_batch_identity(self):
         self.assertEqual(self.batch()['batch_id'], self.batch()['batch_id'])

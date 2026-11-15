@@ -83,19 +83,23 @@ def adopt(cfg, state, backend, batch_id, entity_id, record_id):
 def parser():
     result = argparse.ArgumentParser(description=__doc__)
     subs = result.add_subparsers(dest='command', required=True)
-    for name in ('doctor', 'inspect', 'ingest', 'plan', 'apply', 'verify', 'resume', 'run', 'validate', 'finalize-md', 'export-md', 'import-candidates', 'adopt', 'resolve-identity'):
+    for name in ('doctor', 'inspect', 'ingest', 'plan', 'apply', 'verify', 'resume', 'run', 'validate', 'scores', 'freeze-scores', 'recalibrate', 'import-candidates', 'adopt', 'resolve-identity'):
         sub = subs.add_parser(name)
         sub.add_argument('--config', required=True)
-        if name == 'export-md':
-            sub.add_argument('--output', required=True)
-        if name in ('ingest', 'run', 'validate'):
+        if name == 'scores':
+            sub.add_argument('--record-id', action='append')
+        if name == 'freeze-scores':
+            sub.add_argument('--version', required=True)
+        if name == 'recalibrate':
+            sub.add_argument('--calibration-plan')
+        if name in ('ingest', 'run', 'validate', 'scores'):
             sub.add_argument('--date', required=True)
             sub.add_argument('--manifest')
         if name in ('plan', 'import-candidates', 'adopt'):
             sub.add_argument('--batch', required=True)
         if name in ('run', 'plan', 'import-candidates'):
             sub.add_argument('--candidates', required=name == 'import-candidates')
-        if name == 'run':
+        if name in ('run', 'scores'):
             sub.add_argument('--mode', choices=('plan', 'apply'), default='plan')
         if name in ('apply', 'verify'):
             sub.add_argument('--plan', required=True)
@@ -125,9 +129,16 @@ def main(argv=None):
     backend = adapter_for(cfg)
     try:
         with state.lock():
-            if args.command in ('finalize-md', 'export-md'):
-                import markdown_delivery
-                return markdown_delivery.finalize(state) if args.command == 'finalize-md' else markdown_delivery.export(state, args.output)
+            if args.command in ('freeze-scores', 'recalibrate'):
+                import score_calibration
+                if args.command == 'freeze-scores':
+                    return score_calibration.freeze(cfg, state, backend, args.version)
+                if args.calibration_plan:
+                    return score_calibration.apply(cfg, state, backend, args.calibration_plan)
+                return score_calibration.plan(cfg, state, backend)
+            if args.command == 'scores':
+                import scores
+                return scores.execute(cfg, state, backend, args.date, args.mode, record_ids=args.record_id)
             if args.command == 'doctor':
                 result = backend.doctor()
                 result.update(state_dir=str(state.root), allow_writes=cfg.get('allow_writes', False))
@@ -156,7 +167,7 @@ def main(argv=None):
                     path = Path(args.plan).resolve()
                 document = read_json(path)
                 return sync.apply(cfg, state, document, backend, verify_only=args.command == 'verify')
-            if args.command in ('ingest', 'run', 'validate'):
+            if args.command in ('ingest', 'run', 'validate', 'scores'):
                 if args.command == 'validate' and cfg.get('allow_writes', False):
                     raise ResearchError('validation requires allow_writes=false')
                 try:

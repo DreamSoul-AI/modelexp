@@ -25,9 +25,12 @@
       "allow_create": false,
       "input": {
         "kind": "drive",
-        "folder_token": "REPLACE_MODEL_FOLDER_TOKEN",
         "filename": "model_daily_{date}.csv",
-        "required": true
+        "required": true,
+        "root_folder_token": "REPLACE_GROKBOT_ROOT_FOLDER_TOKEN",
+        "subdirectory": [
+          "model"
+        ]
       },
       "fields": {
         "source_url": {

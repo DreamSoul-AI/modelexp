@@ -121,13 +121,28 @@ class LarkAdapter:
         return fields
 
     def snapshot(self, role, spec):
-        base, table = spec['base_token'], spec['table_id']
         fields = self.schema(spec)
         names = {f['id']: f['name'] for f in fields}
-        ids = [f['field_id'] for f in spec['fields'].values()]
+        ids = list(dict.fromkeys(f['field_id'] for f in spec['fields'].values()))
         if not set(ids) <= set(names):
             raise ResearchError('configured field ID is missing from remote schema')
+        merged, expected_revision = None, None
+        for start in range(0, len(ids), 50):
+            records, revision = self._projection(spec, ids[start:start + 50], names)
+            if merged is None:
+                merged = {r['record_id']: r for r in records}
+                expected_revision = revision
+            else:
+                if revision != expected_revision or set(merged) != {r['record_id'] for r in records}:
+                    raise ResearchError('remote table changed between field projections')
+                for row in records:
+                    merged[row['record_id']]['fields'].update(row['fields'])
+        return fields, list((merged or {}).values())
+
+    def _projection(self, spec, ids, names):
+        base, table = spec['base_token'], spec['table_id']
         records, seen, offset, revision, query = [], set(), 0, None, None
+        first = True
         with tempfile.TemporaryDirectory(dir=self.root) as directory:
             while True:
                 output = f'page-{offset}.ndjson'
@@ -138,8 +153,8 @@ class LarkAdapter:
                 meta = self.call(args, cwd=directory, manifest=True)
                 if meta.get('base_token') != base or meta.get('table_id') != table or not isinstance(meta.get('has_more'), bool):
                     raise ResearchError('export target or pagination metadata mismatch')
-                if revision is None:
-                    revision, query = meta.get('rev'), meta.get('query_context')
+                if first:
+                    revision, query, first = meta.get('rev'), meta.get('query_context'), False
                 elif meta.get('rev') != revision or meta.get('query_context') != query:
                     raise ResearchError('remote table changed during pagination; start a fresh snapshot')
                 page = [json.loads(line) for line in (Path(directory) / output).read_text().splitlines() if line.strip()]
@@ -157,7 +172,7 @@ class LarkAdapter:
                 if not isinstance(next_offset, int) or next_offset <= offset:
                     raise ResearchError('pagination did not advance')
                 offset = next_offset
-        return fields, records
+        return records, revision
 
     def payload_call(self, command, spec, payload):
         with tempfile.TemporaryDirectory(dir=self.root) as directory:

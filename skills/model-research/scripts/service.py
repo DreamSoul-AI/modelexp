@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install a fixed local release and supervise CSV synchronization and read-only validation runs."""
+"""Install fixed releases and supervise CSV, validation and score maintenance."""
 import argparse
 from contextlib import contextmanager
 from datetime import datetime, time, timedelta
@@ -43,7 +43,7 @@ def install(root, config, at='15:00', retry_minutes=30, retry_until='18:00', mod
         raise ResearchError('this trial deployment requires allow_writes=false')
     if mode == 'validate' and cfg.get('allow_writes', False):
         raise ResearchError('validation deployment requires allow_writes=false')
-    if mode not in ('plan', 'apply', 'validate') or mode == 'apply' and not cfg.get('allow_writes', False):
+    if mode not in ('plan', 'apply', 'validate', 'scores') or mode == 'apply' and not cfg.get('allow_writes', False):
         raise ResearchError('apply deployment requires allow_writes=true')
     time.fromisoformat(at)
     time.fromisoformat(retry_until)
@@ -117,7 +117,8 @@ def next_due(settings, previous=None, clock=None):
             return opening
         interval = settings['retry_minutes']
         result = previous.get('result', {})
-        if settings.get('continue_after_minutes') and result.get('readiness') == 'observing':
+        if settings.get('continue_after_minutes') and (result.get('readiness') == 'observing' or
+                settings.get('mode') == 'scores' and result.get('processed', 0) > 0 and result.get('eligible', 0) > result.get('processed', 0)):
             interval = settings['continue_after_minutes']
         due = finished + timedelta(minutes=interval)
         return due if due < closing else opening + timedelta(days=1)
@@ -132,23 +133,24 @@ def tick(root, business_date=None):
         raise ResearchError('trial service refuses a write-enabled configuration')
     if settings['mode'] == 'validate' and cfg.get('allow_writes', False):
         raise ResearchError('validation service refuses a write-enabled configuration')
-    if settings['mode'] not in ('plan', 'apply', 'validate') or settings['mode'] == 'apply' and not cfg.get('allow_writes', False):
+    if settings['mode'] not in ('plan', 'apply', 'validate', 'scores') or settings['mode'] == 'apply' and not cfg.get('allow_writes', False):
         raise ResearchError('deployment mode and write configuration disagree')
     business_date = business_date or datetime.now(TZ).date().isoformat()
     report = {'started_at': now(), 'business_date': business_date, 'mode': settings['mode'],
-              'source_sha256': settings['source_sha256'], 'model_calls': False}
+              'source_sha256': settings['source_sha256'], 'model_calls': 0}
     with exclusive(root / 'tick.lock'):
         script = Path(settings['release']) / 'skills/model-research/scripts/research.py'
-        command = [settings['python'], str(script), 'validate' if settings['mode'] == 'validate' else 'run',
+        command = [settings['python'], str(script), settings['mode'] if settings['mode'] in ('validate', 'scores') else 'run',
                    '--config', settings['config'], '--date', business_date]
         if settings['mode'] != 'validate':
-            command += ['--mode', settings['mode']]
+            command += ['--mode', ('apply' if cfg.get('allow_writes') else 'plan') if settings['mode'] == 'scores' else settings['mode']]
         try:
             timeout = max(240, cfg.get('worker_timeout_seconds', 600) + 60)
             result = run_process(command, timeout=timeout)
             report['exit_code'] = result.returncode
             if result.returncode in (0, 3):
                 report['result'] = json.loads(result.stdout)
+                report['model_calls'] = report['result'].get('model_calls', 0)
                 report['status'] = report['result']['status']
             else:
                 report.update(status='error', reason='worker failed; inspect private worker result')
@@ -171,7 +173,7 @@ def status(root):
     live = process(root)
     return {'status': 'running' if live else 'stopped', 'process': live, 'mode': settings['mode'],
             'allow_writes': cfg.get('allow_writes', False), 'next_run': next_due(settings, previous).isoformat(),
-            'model_calls': False,
+            'model_calls': settings['mode'] == 'scores',
             'deployment': settings, 'last_run': previous}
 
 
@@ -249,7 +251,7 @@ def main():
     install_parser.add_argument('--at', default='15:00')
     install_parser.add_argument('--retry-until', default='18:00')
     install_parser.add_argument('--retry-minutes', type=int, default=30)
-    install_parser.add_argument('--mode', choices=('plan', 'apply', 'validate'), default='plan')
+    install_parser.add_argument('--mode', choices=('plan', 'apply', 'validate', 'scores'), default='plan')
     install_parser.add_argument('--continue-after-minutes', type=int)
     for command in ('start', 'stop', 'status', 'daemon'):
         commands.add_parser(command)

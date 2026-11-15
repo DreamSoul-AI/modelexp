@@ -11,6 +11,35 @@ from lark_adapter import LarkAdapter
 
 
 class AdapterTests(unittest.TestCase):
+    @case(target='lark_adapter.LarkAdapter.snapshot', tags=('scores', 'projection'))
+    def test_more_than_fifty_fields_are_read_in_consistent_chunks(self):
+        schema = [{'id': 'f'+str(i), 'name': 'N'+str(i), 'type': 'number'} for i in range(74)]
+        calls = []
+        def fake(args, cwd=None, **kwargs):
+            if '+field-list' in args:return {'fields': schema}
+            ids = [args[i+1] for i, a in enumerate(args) if a == '--field-id'];calls.append(len(ids))
+            Path(cwd, args[args.index('--output')+1]).write_text(json.dumps(
+                {'record_id': 'r', **{'N'+f[1:]: int(f[1:]) for f in ids}})+'\n')
+            return {'base_token':'b','table_id':'t','rev':1,'query_context':{},'records_count':1,'has_more':False}
+        self.adapter.call = fake
+        _, records = self.adapter.snapshot('models', {'base_token':'b','table_id':'t',
+            'fields': {f['id']:{'field_id':f['id']} for f in schema}})
+        self.assertEqual(calls, [50,24])
+        self.assertEqual(len(records[0]['fields']),74)
+
+    @case(target='lark_adapter.LarkAdapter.snapshot', tags=('scores', 'projection'))
+    def test_projection_revision_change_is_not_silently_merged(self):
+        schema = [{'id': 'f'+str(i), 'name': 'N'+str(i), 'type': 'number'} for i in range(51)]
+        call = 0
+        def fake(args, cwd=None, **kwargs):
+            nonlocal call
+            if '+field-list' in args:return {'fields':schema}
+            call += 1
+            Path(cwd,args[args.index('--output')+1]).write_text('{"record_id":"r"}\n')
+            return {'base_token':'b','table_id':'t','rev':call,'query_context':{},'records_count':1,'has_more':False}
+        self.adapter.call = fake
+        with self.assertRaisesRegex(ResearchError,'between field projections'):
+            self.adapter.snapshot('models',{'base_token':'b','table_id':'t','fields':{f['id']:{'field_id':f['id']} for f in schema}})
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -108,3 +137,23 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(added, ['third'])
         self.assertIn('--dry-run', calls[1])
         self.assertIn('--yes', calls[2])
+
+    @case(target='lark_adapter.LarkAdapter.snapshot', tags=('scores','pagination'))
+    def test_more_than_fifty_fields_are_joined_by_record_identity(self):
+        fields=[{'id':'f'+str(i),'name':'N'+str(i),'type':'text'} for i in range(74)]
+        self.adapter.schema=lambda spec: fields
+        projections=[]
+        def projection(spec,ids,names):
+            projections.append(ids)
+            return [{'record_id':'r','fields':{i:names[i] for i in ids}}],7
+        self.adapter._projection=projection
+        _,records=self.adapter.snapshot('models',{'fields':{f['id']:{'field_id':f['id']} for f in fields}})
+        self.assertEqual([len(p) for p in projections],[50,24]);self.assertEqual(len(records[0]['fields']),74)
+
+    @case(target='lark_adapter.LarkAdapter.snapshot', tags=('scores','pagination'))
+    def test_projection_revision_change_rejects_inconsistent_snapshot(self):
+        fields=[{'id':'f'+str(i),'name':'N'+str(i),'type':'text'} for i in range(51)]
+        self.adapter.schema=lambda spec:fields
+        self.adapter._projection=lambda spec,ids,names:([{'record_id':'r','fields':{i:'v' for i in ids}}],len(ids))
+        with self.assertRaisesRegex(ResearchError,'between field projections'):
+            self.adapter.snapshot('models',{'fields':{f['id']:{'field_id':f['id']} for f in fields}})

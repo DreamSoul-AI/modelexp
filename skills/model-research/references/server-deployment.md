@@ -1,36 +1,35 @@
 # Linux 服务器部署与迁移
 
-当前版本由 CSV 同步和只读表格校验两个独立服务组成；Markdown 交给 Grokbot，不安装或调用模型生成器，不接续旧研究队列。
+当前部署由 CSV 同步、只读校验、评分维护三个独立服务组成。Markdown 由 Grokbot 管理，旧正文服务及队列保持停用。
 
-## 环境和私有数据
+## 环境与授权
 
-使用 Python 3.11+、Node.js 和官方 lark-cli；普通专用用户运行，配置和 state 放仓外持久磁盘，目录700、配置600。建议目录为 /srv/model-research/repo、csv、validate、archives。不得把凭据、私有配置、SQLite 或原 CSV 提交 Git。
+Python 3.11+、Node.js、官方 lark-cli 与 Codex CLI。专用普通用户运行；配置、持久 state 和授权放仓外，私有目录700、文件600。迁移前核对哈希，保留原包、基线、原件、人工内容及未知提交回执。先处理旧未知提交，不能清空数据库绕过。
 
-迁移包先核对 manifest 哈希，保留原包；复制 CSV 状态时保留映射、字段基线、历史原件、证据和人工修改。submitting/submitted/unknown 操作先对账，不能重建记录绕过。旧 AI state 离线归档，先 export-md 打包历史正文和索引，再停用并屏蔽旧服务。
+使用服务用户完成飞书应用配置及 user 授权；检查私有父目录归属和可写权限。Codex 使用官方浏览器登录流程及专用私有 CODEX_HOME，不要求设备代码或聊天传令牌。登录状态与真实调用分别测试。飞书显式 --as user，不切换身份绕过权限。
 
-## 官方授权
+## 配置
 
-安装并核对官方 lark-cli 帮助，使用服务用户配置已有应用并完成 user 授权；不要把 App Secret、密码或令牌发到聊天或写进仓库。父目录必须归服务用户所有且可写，避免 keychain 存储失败。doctor 必须实际验证 user 身份和资源权限。
+CSV allow_writes=true；validate allow_writes=false，validation.baseline_state_dir 只读指向 CSV state。两者映射同一批字段。Grokbot 用根目录 token 与具名子目录，不递归混入 md 或 backfill。量化为可选的当日输入，明确27列映射和两列待处理边界。
 
-当前同步与校验都不需要 Codex 授权。历史独立 Codex 凭据可保留在私有目录，不由本次迁移擅自删除。
+scores 只配置 models，基础身份与模态只读，三个能力相关数值和维护元信息按 AI 策略；公式只读、allow_create=false。scores.enabled=true，设置官方模型、codex_command、codex_state_dir、reference_file、sync_root、批量大小、每日调用预算、额度暂停阈值与重查间隔。allow_unconfirmed_input=true 只用于已实际读取来源的评分证据批次，不复制给 CSV；评分仍先等待同日 CSV 稳定。
 
-## 配置和安装
+用户授权建立新版本后，freeze-scores 保存不可变参考与快照，recalibrate 生成计划，再 --calibration-plan 应用。不可覆盖参考文件或混用版本。日常更新依原固定分布标化，公式/原始权重不变。
 
-同步配置保留已授权映射、人工保护、选项追加和批量大小，allow_writes=true、agent.enabled=false。校验配置复制相同的字段规则，allow_writes=false，state_dir=./state，并设置 validation.baseline_state_dir 指向 CSV 的 state；两套状态目录必须分开。
+## 安装与 systemd
+
+服务根目录可用 /srv/model-research/csv、validate、scores。升级前安全停止对应服务并保存配置，保留 state；用新源码安装固定版本：
 
 ```text
 python3 skills/model-research/scripts/service.py --root /srv/model-research/csv install --config /srv/model-research/csv/project.json --mode apply --at 12:00 --retry-until 18:00 --continue-after-minutes 1
 python3 skills/model-research/scripts/service.py --root /srv/model-research/validate install --config /srv/model-research/validate/project.json --mode validate --at 12:00 --retry-until 18:00 --continue-after-minutes 1
+python3 skills/model-research/scripts/service.py --root /srv/model-research/scores install --config /srv/model-research/scores/project.json --mode scores --at 12:00 --retry-until 18:00 --continue-after-minutes 1
 ```
 
-旧 research 服务模式、agent.command 已不受支持。不得复用旧 AI manage/deployment.json 来启动研究；旧固定版本仅保留为离线恢复依据。已有 CSV 服务升级前先安全停止，保留私有配置和 state，安装新固定版本后重新交给 systemd。
+调整[systemd模板](../deploy/model-research@.service)里的专用用户、真实目录与 CLI/Node PATH。enable --now 三个实例；旧 model-research@ai.service disable/mask，不复用旧部署启动 research。systemd 监督前台 daemon，不额外 manage start。
 
-## systemd 与验收
+## 真实验收
 
-安装 [systemd模板](../deploy/model-research@.service)，按真实专用用户和 CLI/Node 路径调整 PATH，enable --now model-research@csv.service model-research@validate.service。systemd 前台监督时不额外 manage start。旧 model-research@ai.service 保持 disable/mask。
+CSV：doctor、当前文件、两次稳定观察、计划、写回、回读及重复运行无重复新增。校验：四表字段与 CSV 对照，报告具体记录/字段，证明无写表和模型调用，不能把 partial 当全通过。评分：实际来源及真实模型调用、三能力范围、冻结参考指纹、计划和回读、重复执行与额度/失败恢复。重算前后原始分及公式应保持。
 
-验收包括：doctor、真实 CSV 读取、稳定观察、增量计划与回读、重复运行不重复新增；真实只读校验覆盖所有配置表，产出带具体记录/字段/CSV行号的报告，并证明无远端写入、无模型调用。不要为测试制造线上脏记录。问题项可以保留待人工处理，不擅自改评分和历史值。
-
-检查 systemctl 状态、真实 PID/启动指纹、heartbeat、last-run、worker-results、state/validation/latest.json 和问题 CSV。partial 不算全表通过。校验和同步同时12:00启动时可能先看到未同步的新行，后续检查会反映最新一致性。
-
-重启恢复与后续12:00自然触发分别验证；实际未观察的验收不得宣称已通过。当前尚无自动失败通知和授权到期提醒，不把存活进程当作完整业务保障。
+检查 systemd PID、heartbeat、last-run、worker-results、validation/latest.json、scores/latest.json。重启恢复和下一次北京时间12:00自然触发必须实际观察后再报告，进程启动不是业务验收。当前无自动失败通知和每日变更摘要。

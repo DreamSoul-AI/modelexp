@@ -101,6 +101,10 @@ def creation_blocker(item, spec, fields, records, unidentified):
         for key in guards:
             value = record['fields'].get(fields[key]['id'])
             if value and canonical(value) == canonical(guard_values[key]):
+                if spec.get('allow_distinct_artifact_files') and item['role'] == 'artifacts' and record['record_id'] not in unidentified:
+                    other, _ = identity('artifacts', spec, {k:record['fields'].get(f['id']) for k,f in fields.items()})
+                    if other != item['entity_id']:
+                        continue
                 return 'remote_name_or_alias_requires_adoption'
         if record['record_id'] not in unidentified:
             continue

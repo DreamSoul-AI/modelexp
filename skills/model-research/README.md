@@ -1,55 +1,52 @@
-# Model 资料同步与表格校验
+# Model 资料同步、校验与评分维护
 
-当前版本将 Grokbot 成品 CSV 增量同步到飞书，并独立校验字段规则与 CSV/线上记录的一致性。Markdown 正文交由 Grokbot；本程序不调用模型、不建立研究队列、不生成调研正文。既有 `src/` 训练流程不变。
+本程序将 Grokbot 成品 CSV 同步飞书，独立校验填表一致性，并每日维护语言模型的代码、Agent、数学评测。Markdown 由 Grokbot 管理，不生成正文或每日摘要，不使用旧研究队列。
 
-## 使用入口
+## 三个独立服务
 
-Python 3.11+ 标准库，Linux/macOS；飞书通过官方 lark-cli，以 `--as user` 操作。私有配置和状态放 checkout 外。先读取 [SKILL.md](SKILL.md)、[配置样例](assets/project.example.json) 和[服务器部署指南](references/server-deployment.md)。
+| 服务 | 数据与行为 | 模型调用 |
+| --- | --- | --- |
+| csv | 模型、Benchmark、渠道、量化输入；计划、增量写回、回读与人工保护 | 无 |
+| validate | 四表字段规则及 CSV/线上逐项核对；只输出问题，不修表 | 无 |
+| scores | 文字输出的生成式语言模型；来源变化检查、三能力成绩及证据维护 | 官方 Codex CLI |
+
+每天北京时间12:00开始、18:00前重试；评分等待同业务日 CSV 稳定。三套配置、state 与锁分开。没有当日文件时明确等待，不能把旧成功记录当今天完成。
+
+## Grokbot 输入
+
+配置 `root_folder_token` 与 `subdirectory: ["model"]` 等具名子目录；不递归混入其他目录。模型、Benchmark、渠道使用各自 `*_daily_{date}.csv`，量化使用 `Quant Trail_daily_{date}.csv`，可设 `required:false`。source_links/backfill 不处理，`md/existing` 与 `md/backfill` 继续由 Grokbot 管理。
+
+量化当前按线上真实类型映射27列。原模型名称不能直接写入关联列；效果证据长句不能直接写入单选列，故这两列保留原 CSV 待明确映射。未知数值留空，不填0、不臆造显存/速度。
+
+## 使用
+
+Python 3.11+ 标准库、官方 lark-cli；scores 另需官方 Codex CLI。凭据、实际配置、参考集合与状态置于仓外，先读取 [SKILL.md](SKILL.md)、[配置样例](assets/project.example.json)和[部署指南](references/server-deployment.md)。
 
 ```text
 python3 skills/model-research/scripts/research.py doctor --config <配置>
-python3 skills/model-research/scripts/research.py inspect --config <配置> --role models
-python3 skills/model-research/scripts/research.py run --config <同步配置> --date <业务日> --mode apply
-python3 skills/model-research/scripts/research.py validate --config <只读校验配置> --date <业务日>
+python3 skills/model-research/scripts/research.py run --config <CSV配置> --date <业务日> --mode apply
+python3 skills/model-research/scripts/research.py validate --config <只读配置> --date <业务日>
+python3 skills/model-research/scripts/research.py scores --config <评分配置> --date <业务日> --mode apply
 ```
 
-同步配置 `allow_writes=true`，受控字段明确 `accept_upstream=true`、`prefer_upstream=true`。Agent 必须关闭；旧模型命令或 `agent.enabled=true` 会明确报错。无生产方完成声明时，至少两次相同内容、间隔不少于60秒的稳定观察后才写入。字段映射、格式规范、批量提交与人工保护沿用原规则；未知提交先对账，不重复新建。
+同步配置显式允许写入；校验必须 allow_writes=false。旧 agent.enabled/command 不可启用；评分使用独立 scores 配置。无 manifest 时至少两次一致内容且间隔60秒才允许同步。无基线的非空值保留，后续三方比较保护人工修改，未知提交先 verify/resume，不按 CSV 缺行删除历史记录。
 
-校验配置 `allow_writes=false`，使用独立 state_dir；复制同步配置的字段归属与列映射，不把所有字段改为 unassigned。配置 `validation.baseline_state_dir` 指向同步 state，以只读方式识别已保护的人工修改。校验不会推进同步基线。
+## 评分与冻结版本
 
-## 校验范围
+只处理输出文字的生成式语言模型；专项和基座单列，多模态模型只取本配置明确的文字能力成绩。字段仅限代码、Agent、数学；科学、通用、指令遵循不参与维护。新 Benchmark 输出三能力内映射候选，不自动扩充能力或修改公式权重。
 
-- 读取所有配置表的实时 schema 和记录，检查映射字段类型、枚举值、日期格式、完整实体身份、重复身份与重复 record_id。
-- 逐项比较当前业务日 CSV 与唯一匹配的线上记录，报告漏同步、字段差异、映射改变、输入错误与双方冲突。
-- 人工维护、公式、只读、未归属字段不按 CSV 强制一致；已保护的人工修订单列为信息，不自动覆盖。
-- 历史记录不因当天 CSV 缺行而被删除或判为漏项。量化与后训练表没有当前 CSV 时仍检查其映射字段和身份，但不冒充做过 CSV 对照。
-- 输出私有 `state/validation/latest.json`、逐次 JSON 和 UTF-8 BOM 问题 CSV。字段包含严重性、原因、表角色、实体、record_id、CSV 行号、字段、期望值与实际值；保留读取快照。
+新冻结版本需用户授权，先 freeze-scores --version <新版本>，再 recalibrate 生成计划，核实后用 --calibration-plan <计划> 写回。参考文件一旦存在不可覆盖；通过新文件和新版本进行下一次迁移。v0.3 使用固定参考样本的中位秩经验百分位，后续成绩按同一分布计算。完整规则与原权重见[架构](<../../docs/架构设计 Architecture Design 模型调研自动化.md>)。重算前保留快照，写前核对原值，写后验证，重复执行不重写。
 
-这是结构与一致性校验，不验证许可、模型规模、量化效果、跑分等事实的真实性，不调用模型或自动访问研究来源。校验结果有错误或警告时返回 `partial`（CLI退出码3）；严重性 info 的人工差异不阻断通过。输入不稳定、缺失或后端不可读不能报通过。
+日常评分读取实际公开源，再提取逐字证据、Benchmark版本与配置，不让模型编造标化分。记录和来源均未变化时跳过模型。额度未知、达到阈值或日调用预算时暂停，超时停止整个子进程组，失败回执支持后续继续；不把失败标成完成。
 
-## 两项定时服务
+## 问题处理与验证
+
+校验问题保存在 state/validation/latest.json、逐次 JSON 和问题 CSV。评分状态在 state/scores/latest.json、receipts 与私有调用材料。无自动修表、通知或每日摘要；同步、校验和评分的 partial 都需阅读具体原因。校验仅证明字段和数据一致性，不能证明资料真实。
 
 ```text
-python3 skills/model-research/scripts/service.py --root <csv目录> install --config <同步配置> --mode apply --at 12:00 --retry-until 18:00 --continue-after-minutes 1
-python3 skills/model-research/scripts/service.py --root <validate目录> install --config <只读校验配置> --mode validate --at 12:00 --retry-until 18:00 --continue-after-minutes 1
+python3 skills/model-research/tests/run_tests.py --output <新的仓外目录>
 ```
 
-两服务使用独立 state、锁和运行记录。systemd 以前台 daemon 管理开机恢复；内部调度使用 Asia/Shanghai，稳定观察阶段一分钟接续，常规检查间隔30分钟。校验可在同步之前发现临时差异，下次只读检查会更新报告，不会争抢同步写锁。
+测试结果含逐用例记录。真实 CSV、模型调用、写后回读、重复运行、调度与重启分别验收。旧 Markdown 源码及快照已清理，历史成果在 Git 和仓外归档中保留；[Grokbot 写作提示词](assets/grokbot-md-prompt.txt)继续可用。
 
-## 恢复与历史数据
-
-`ingest`、`plan`、`apply`、`verify`、`resume`、`adopt`、`resolve-identity` 保留原有保护与对账规则，参见[同步与恢复](references/sync.md)。保留 SQLite 映射、字段基线、原 CSV、证据及历史人工修改。CSV 内部 dossier 是既有同步元信息存储，不是新生成的研究正文。
-
-旧 `research` 服务模式、Codex 正文适配器和研究队列已移除。旧研究服务应停用并屏蔽，私有历史 state 可离线归档。保留 `export-md`、`finalize-md` 仅供历史文档迁移；候选导入不再接受 dossiers 正文。历史报告位于 [reports/model-research](../../reports/model-research/README.md)，不代表自动更新。
-
-## Grokbot Markdown 交接
-
-完整可复制的[写作提示词](assets/grokbot-md-prompt.txt)规定实体、版本、来源、评测条件、量化/训练关系、未知项与人工保护。Grokbot 生成文档和索引后打包交付，不由本程序自动发布或推送。
-
-## 验证
-
-```text
-python3 skills/model-research/tests/run_tests.py --output <新的仓外结果目录>
-```
-
-测试使用本地文件后端，覆盖只读校验、字段冲突、人工修订、历史记录、重复运行、提交回执丢失和恢复；真实飞书校验另行记录。未运行或失败项不计通过。
+评分版本、公式与参考样本数见[冻结评分规则](references/scoring.md)。

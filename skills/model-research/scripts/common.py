@@ -111,6 +111,8 @@ def load_config(path):
             raise ResearchError(f'{role}: fields and identity are required')
         if not set(spec['identity']) <= set(spec['fields']):
             raise ResearchError(f'{role}: identity must refer to mapped field keys')
+        if 'allow_distinct_artifact_files' in spec and (role != 'artifacts' or not isinstance(spec['allow_distinct_artifact_files'], bool)):
+            raise ResearchError('allow_distinct_artifact_files is only a boolean artifact policy')
         guards = spec.get('creation_guard_keys', [])
         if guards and (not isinstance(guards, list) or not set(guards) <= set(spec['fields']) or
                        any(spec['fields'][key]['type'] != 'text' for key in guards)):
@@ -154,4 +156,17 @@ def load_config(path):
     validation = cfg.get('validation', {})
     if validation.get('baseline_state_dir'):
         validation['baseline_state_dir'] = str((path.parent / validation['baseline_state_dir']).resolve())
+    scores = cfg.get('scores', {})
+    if scores.get('enabled'):
+        if set(cfg['roles']) != {'models'}:
+            raise ResearchError('score maintenance must use a separate models-only configuration')
+        for key in ('codex_state_dir', 'reference_file'):
+            if scores.get(key):
+                scores[key] = str((path.parent / scores[key]).resolve())
+                if Path(scores[key]).is_relative_to(checkout):
+                    raise ResearchError('score credentials and calibration must stay outside checkout')
+        if not scores.get('model') or not scores.get('codex_state_dir'):
+            raise ResearchError('score model and private Codex state are required')
+        if not 1 <= scores.get('max_calls_per_day', 12) <= 100:
+            raise ResearchError('invalid daily score model budget')
     return cfg

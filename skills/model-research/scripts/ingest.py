@@ -36,6 +36,20 @@ def latest_snapshot(candidates, business_date):
     return [entry for stamp, entry in dated if stamp == newest]
 
 
+def input_folder(source, drive):
+    folder = source.get('root_folder_token') or source.get('folder_token')
+    if not folder:
+        raise ResearchError('Drive source requires a folder token')
+    for component in source.get('subdirectory', []):
+        if not isinstance(component, str) or not component or component in ('.', '..') or '/' in component:
+            raise ResearchError('invalid source subdirectory')
+        matches = [f for f in drive.list_files(folder) if f['type'] == 'folder' and f['name'] == component]
+        if len(matches) != 1:
+            raise ResearchError('missing or ambiguous Grokbot subdirectory: ' + component)
+        folder = matches[0]['token']
+    return folder
+
+
 def ingest(cfg, state, business_date, drive=None, manifest_path=None):
     date.fromisoformat(business_date)
     manifest = read_json(manifest_path) if manifest_path else None
@@ -53,7 +67,7 @@ def ingest(cfg, state, business_date, drive=None, manifest_path=None):
             folder = Path(source['directory'])
             candidates = [{'name': p.name, 'path': p} for p in folder.iterdir() if p.is_file() and fnmatch.fnmatch(p.name, pattern)] if folder.is_dir() else []
         elif source.get('kind') == 'drive' and drive:
-            candidates = [f for f in drive.list_files(source['folder_token']) if f['type'] == 'file' and fnmatch.fnmatch(f['name'], pattern)]
+            candidates = [f for f in drive.list_files(input_folder(source, drive)) if f['type'] == 'file' and fnmatch.fnmatch(f['name'], pattern)]
         else:
             raise ResearchError('Drive inputs require an explicitly configured lark backend')
         if source.get('latest_snapshot', False):
