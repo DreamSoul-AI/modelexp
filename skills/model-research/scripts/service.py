@@ -2,7 +2,7 @@
 """Install fixed releases and supervise CSV, validation and score maintenance."""
 import argparse
 from contextlib import contextmanager
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 import fcntl
 import hashlib
 import json
@@ -36,7 +36,7 @@ def exclusive(path):
             fcntl.flock(stream, fcntl.LOCK_UN)
 
 
-def install(root, config, at='15:00', retry_minutes=30, retry_until='18:00', mode='plan', continue_after_minutes=None):
+def install(root, config, at='15:00', retry_minutes=30, retry_until='18:00', mode='plan', continue_after_minutes=None, start_date=None):
     root = Path(root).resolve()
     cfg = load_config(config)
     if mode == 'plan' and cfg.get('allow_writes', False):
@@ -45,6 +45,8 @@ def install(root, config, at='15:00', retry_minutes=30, retry_until='18:00', mod
         raise ResearchError('validation deployment requires allow_writes=false')
     if mode not in ('plan', 'apply', 'validate', 'scores') or mode == 'apply' and not cfg.get('allow_writes', False):
         raise ResearchError('apply deployment requires allow_writes=true')
+    if start_date is not None:
+        start_date = date.fromisoformat(start_date).isoformat()
     time.fromisoformat(at)
     time.fromisoformat(retry_until)
     if at >= retry_until or not 1 <= retry_minutes <= 180:
@@ -76,7 +78,7 @@ def install(root, config, at='15:00', retry_minutes=30, retry_until='18:00', mod
                 'config': str(config), 'python': sys.executable, 'mode': mode,
                 'timezone': 'Asia/Shanghai', 'at': at, 'retry_minutes': retry_minutes,
                 'retry_until': retry_until, 'installed_at': now(),
-                'continue_after_minutes': continue_after_minutes,
+                'continue_after_minutes': continue_after_minutes, 'start_date': start_date,
                 'lifecycle': 'current cloud environment only; no host restart integration'}
     write_json(root / 'deployment.json', settings)
     command = [sys.executable, str(current / 'skills/model-research/scripts/service.py'), '--root', str(root)]
@@ -105,7 +107,8 @@ def process(root):
 
 def next_due(settings, previous=None, clock=None):
     clock = (clock or datetime.now(TZ)).astimezone(TZ)
-    opening = datetime.combine(clock.date(), time.fromisoformat(settings['at']), TZ)
+    first_day = date.fromisoformat(settings['start_date']) if settings.get('start_date') else clock.date()
+    opening = datetime.combine(max(clock.date(), first_day), time.fromisoformat(settings['at']), TZ)
     closing = datetime.combine(clock.date(), time.fromisoformat(settings['retry_until']), TZ)
     if clock < opening:
         return opening
@@ -253,13 +256,14 @@ def main():
     install_parser.add_argument('--retry-minutes', type=int, default=30)
     install_parser.add_argument('--mode', choices=('plan', 'apply', 'validate', 'scores'), default='plan')
     install_parser.add_argument('--continue-after-minutes', type=int)
+    install_parser.add_argument('--start-date', help='First automatic business date in Asia/Shanghai; explicit ticks remain available')
     for command in ('start', 'stop', 'status', 'daemon'):
         commands.add_parser(command)
     tick_parser = commands.add_parser('tick')
     tick_parser.add_argument('--date')
     args = parser.parse_args()
     if args.command == 'install':
-        return install(args.root, args.config, args.at, args.retry_minutes, args.retry_until, args.mode, args.continue_after_minutes)
+        return install(args.root, args.config, args.at, args.retry_minutes, args.retry_until, args.mode, args.continue_after_minutes, args.start_date)
     if args.command == 'tick':
         return tick(args.root, args.date)
     return globals()[args.command](args.root)

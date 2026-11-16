@@ -128,3 +128,20 @@ class ServiceTests(Workspace):
                   'result':{'readiness':'observing'}}
         clock=datetime.fromisoformat('2026-11-14T15:05:10+08:00')
         self.assertEqual(service.next_due(settings,previous,clock).isoformat(),'2026-11-14T15:06:00+08:00')
+
+    @case(target='service.next_due', tags=('schedule','cutover'))
+    def test_formal_start_date_prevents_early_run_even_with_old_results(self):
+        settings={'at':'12:00','retry_until':'18:00','retry_minutes':30,'start_date':'2026-11-17'}
+        previous={'business_date':'2026-11-16','finished_at':'2026-11-16T15:00:00+08:00'}
+        for stamp in ('2026-11-16T11:00:00+08:00','2026-11-16T16:00:00+08:00','2026-11-17T11:59:59+08:00'):
+            self.assertEqual(service.next_due(settings,previous,datetime.fromisoformat(stamp)).isoformat(),'2026-11-17T12:00:00+08:00')
+        clock=datetime.fromisoformat('2026-11-17T12:00:00+08:00')
+        self.assertEqual(service.next_due(settings,previous,clock),clock)
+
+    @case(target='service.install', tags=('schedule','cutover'))
+    def test_install_persists_start_date_and_rejects_invalid_calendar_date(self):
+        self.config(lambda c:c.update(allow_writes=False))
+        installed=service.install(self.root/'service',self.config_path,at='12:00',start_date='2026-11-17')
+        self.assertEqual(installed['start_date'],'2026-11-17')
+        with self.assertRaises(ValueError):
+            service.install(self.root/'invalid',self.config_path,start_date='2026-02-30')

@@ -2,7 +2,7 @@
 name: model-research
 description: 接收Grokbot CSV同步飞书，独立只读校验，并维护文字输出语言模型的代码、Agent、数学评测；Markdown由Grokbot管理。
 metadata:
-  version: "0.8.0"
+  version: "0.8.1"
 ---
 
 # Model 资料与评测维护

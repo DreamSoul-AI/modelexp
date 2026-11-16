@@ -33,3 +33,7 @@ python3 skills/model-research/scripts/service.py --root /srv/model-research/scor
 CSV：doctor、当前文件、两次稳定观察、计划、写回、回读及重复运行无重复新增。校验：四表字段与 CSV 对照，报告具体记录/字段，证明无写表和模型调用，不能把 partial 当全通过。评分：实际来源及真实模型调用、三能力范围、冻结参考指纹、计划和回读、重复执行与额度/失败恢复。重算前后原始分及公式应保持。
 
 检查 systemd PID、heartbeat、last-run、worker-results、validation/latest.json、scores/latest.json。重启恢复和下一次北京时间12:00自然触发必须实际观察后再报告，进程启动不是业务验收。当前无自动失败通知和每日变更摘要。
+
+## 指定正式启用日期
+
+清理和历史日报回放期间，先停止三个服务并备份表格、配置、状态与基线。安装时可用 `--start-date YYYY-MM-DD` 指定北京时间的首次自动业务日；服务可以提前启动待机，主机重启也不会提前运行。显式 `tick --date` 仍可用于已授权的历史回放。历史回放按日期顺序、先计划后写回，保留原始文件与哈希，逐日回读；不能复用已被回滚的旧操作回执跳过新写入。
