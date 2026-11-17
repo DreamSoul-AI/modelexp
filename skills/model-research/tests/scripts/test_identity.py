@@ -6,6 +6,22 @@ from identity import identity, normalize, source_value, url_identity
 
 
 class IdentityTests(unittest.TestCase):
+    @case(target='identity.source_value', tags=('csv', 'repair'))
+    def test_plus_separated_existing_options_are_repaired_without_inventing_options(self):
+        field = {'type': 'select', 'multiple': True,
+                 'options': [{'name': x} for x in ('评测框架', '评测套件', 'C++', 'HumanEval+', '文本+图像输入')]}
+        self.assertEqual(source_value('评测框架+评测套件', field), ['评测套件', '评测框架'])
+        self.assertEqual(source_value('评测框架 ＋ 评测套件', field), ['评测套件', '评测框架'])
+        for name in ('C++', 'HumanEval+', '文本+图像输入'):
+            self.assertEqual(source_value(name, field), [name])
+        self.assertEqual(source_value('C++;评测框架+评测套件', field), ['C++', '评测套件', '评测框架'])
+        for invalid in ('评测框架+未知', '评测框架+', '+评测套件'):
+            with self.assertRaisesRegex(ResearchError, 'unknown options'):
+                source_value(invalid, field)
+        field['multiple'] = False
+        with self.assertRaisesRegex(ResearchError, 'unknown options'):
+            source_value('评测框架+评测套件', field)
+
     @case(target='identity.identity', tags=('identity', 'variants'))
     def test_configured_variant_separates_models_sharing_repository_revision(self):
         spec = {'identity': ['url', 'revision', 'variant'], 'fields': {

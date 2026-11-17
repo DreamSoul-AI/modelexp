@@ -2,6 +2,13 @@
 import asyncio
 import json
 import os
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+
+def seconds_until_close(clock=None):
+    clock = (clock or datetime.now(ZoneInfo('Asia/Shanghai'))).astimezone(ZoneInfo('Asia/Shanghai'))
+    return max(0, (clock.replace(hour=18, minute=0, second=0, microsecond=0) - clock).total_seconds())
 
 
 async def _read(settings):
@@ -52,7 +59,7 @@ def available(settings):
             return False, {'reason': 'account_limit_reached'}
         for key in ('primary', 'secondary'):
             window = bucket.get(key)
-            if window and window.get('usedPercent', 100) >= settings.get('quota_stop_percent', 95):
+            if window and window.get('usedPercent', 100) >= settings.get('quota_stop_percent', 90):
                 return False, {'reason': 'quota_low', 'resets_at': window.get('resetsAt')}
     if not any(bucket.get('primary') for bucket in limits.values()):
         return False, {'reason': 'quota_window_missing'}

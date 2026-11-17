@@ -37,11 +37,11 @@ python3 skills/model-research/scripts/research.py scores --config <评分配置>
 
 新冻结版本需用户授权，先 freeze-scores --version <新版本>，再 recalibrate 生成计划，核实后用 --calibration-plan <计划> 写回。参考文件一旦存在不可覆盖；通过新文件和新版本进行下一次迁移。v0.3 使用固定参考样本的中位秩经验百分位，后续成绩按同一分布计算。完整规则与原权重见[架构](<../../docs/架构设计 Architecture Design 模型调研自动化.md>)。重算前保留快照，写前核对原值，写后验证，重复执行不重写。
 
-日常评分读取实际公开源，再提取逐字证据、Benchmark版本与配置，不让模型编造标化分。记录和来源均未变化时跳过模型。额度未知、达到阈值或日调用预算时暂停，超时停止整个子进程组，失败回执支持后续继续；不把失败标成完成。
+日常评分读取实际公开源，再提取逐字证据、Benchmark版本与配置，不让模型编造标化分。记录和来源均未变化时跳过模型。每次新模型调用前查询官方账户额度，任一额度窗口已用达到90%、额度未知或北京时间18:00时暂停；临近18:00缩短模型超时，给进程清理留出时间。默认不设每日调用次数上限，实际调用持续记账；max_calls_per_day 缺省或 null 表示无次数上限，正整数可另设限制。失败回执支持后续继续；已提交的写回仍须完成核验，不把失败标成完成。
 
 ## 问题处理与验证
 
-校验问题保存在 state/validation/latest.json、逐次 JSON 和问题 CSV。评分状态在 state/scores/latest.json、receipts 与私有调用材料。无自动修表、通知或每日摘要；同步、校验和评分的 partial 都需阅读具体原因。校验仅证明字段和数据一致性，不能证明资料真实。
+校验问题保存在 state/validation/latest.json、逐次 JSON 和问题 CSV。评分状态在 state/scores/latest.json、receipts 与私有调用材料。CSV 同步会自动归一可确定的格式问题，再经写前保护、写回和回读；例如多选单元格“评测框架+评测套件”对应两个已有选项。未知枚举、缺少可查证的 revision 和人工冲突保留为具体问题，不猜值或覆盖。validate 保持只读；没有自动通知或每日摘要。partial 仍需阅读具体原因，数据一致性不能证明资料真实。
 
 ```text
 python3 skills/model-research/tests/run_tests.py --output <新的仓外目录>

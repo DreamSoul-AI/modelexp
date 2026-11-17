@@ -38,6 +38,9 @@ def execute(cfg, state, backend, business_date, mode='plan', record_ids=None):
         raise ResearchError('score apply requires explicit write authorization')
     if not settings.get('enabled'):
         raise ResearchError('scores.enabled is required')
+    if not score_quota.seconds_until_close():
+        return {'status': 'partial', 'business_date': business_date, 'reason': 'daily_window_closed',
+                'processed': 0, 'model_calls': 0, 'remote_writes': 0}
     if settings.get('sync_root'):
         previous = Path(settings['sync_root']) / 'last-run.json'
         sync_result = read_json(previous) if previous.exists() else {}
@@ -142,20 +145,29 @@ def execute(cfg, state, backend, business_date, mode='plan', record_ids=None):
     write_json(run / 'request.json', request)
     packet, cached_call = cached_response(folder, request, run)
     if packet is None:
-        if counter['calls'] >= settings.get('max_calls_per_day', 12):
+        budget = settings.get('max_calls_per_day')
+        if budget is not None and counter['calls'] >= budget:
             result['reason'] = 'daily_model_budget_reached'
             return finish()
         ready, quota = score_quota.available(settings)
         if not ready:
             result.update(reason=quota['reason'], quota=quota)
             return finish()
+    remaining = score_quota.seconds_until_close()
+    if remaining <= 5:
+        result['reason'] = 'daily_window_closed'
+        return finish()
+    # Let the inner CLI wrapper stop its own process group before the outer deadline.
+    timeout = min(settings.get('model_timeout_seconds', 400), remaining - 5)
+    request['runtime']['timeout_seconds'] = timeout
+    write_json(run / 'request.json', request)
     command = [sys.executable, str(Path(__file__).with_name('score_agent.py')), str(run / 'request.json')]
     try:
         if packet is None:
             counter['calls'] += 1
             write_json(counter_path, counter)
             result['model_calls'] = 1
-            response = run_process(command, timeout=settings.get('model_timeout_seconds', 400) + 30)
+            response = run_process(command, timeout=min(timeout + 30, remaining))
             if response.returncode:
                 raise ResearchError('score agent failed; inspect private call artifacts')
             packet = json.loads(response.stdout)

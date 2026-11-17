@@ -9,6 +9,23 @@ import sync
 
 
 class CsvSyncTests(Workspace):
+    @case('integration', 'CSV compound select -> guarded sync -> readback -> repeat', ('csv', 'repair'))
+    def test_repaired_multiselect_is_written_and_repeat_creates_nothing(self):
+        self.direct()
+        self.config(lambda cfg: cfg['roles']['channels']['fields']['note'].update(type='select'))
+        def schema(table):
+            field = next(f for f in table['fields'] if f['id'] == 'fld_note')
+            field.update(type='select', multiple=True, options=[{'name': '评测框架'}, {'name': '评测套件'}])
+        self.edit_remote(schema)
+        self.edit_csv(lambda rows: [row.update(备注='评测框架+评测套件') for row in rows])
+        applied = sync.apply(self.cfg, self.state, self.make_plan(), self.backend)
+        self.assertEqual(applied['counts'], {'verified': 2})
+        for record in self.remote()['tables']['channels']['records']:
+            self.assertEqual(record['fields']['fld_note'], ['评测套件', '评测框架'])
+        repeat = self.make_plan()
+        self.assertEqual(repeat['operations'], [])
+        self.assertEqual(repeat['issues'], [])
+
     def direct(self):
         def configure(cfg):
             cfg['backend']['batch_size'] = 200

@@ -12,7 +12,7 @@ Python 3.11+、Node.js、官方 lark-cli 与 Codex CLI。专用普通用户运�
 
 CSV allow_writes=true；validate allow_writes=false，validation.baseline_state_dir 只读指向 CSV state。两者映射同一批字段。Grokbot 用根目录 token 与具名子目录，不递归混入 md 或 backfill。量化为可选的当日输入，明确27列映射和两列待处理边界。
 
-scores 只配置 models，基础身份与模态只读，三个能力相关数值和维护元信息按 AI 策略；公式只读、allow_create=false。scores.enabled=true，设置官方模型、codex_command、codex_state_dir、reference_file、sync_root、批量大小、每日调用预算、额度暂停阈值与重查间隔。allow_unconfirmed_input=true 只用于已实际读取来源的评分证据批次，不复制给 CSV；评分仍先等待同日 CSV 稳定。
+scores 只配置 models，基础身份与模态只读，三个能力相关数值和维护元信息按 AI 策略；公式只读、allow_create=false。scores.enabled=true，设置官方模型、codex_command、codex_state_dir、reference_file、sync_root、批量大小与重查间隔。quota_stop_percent 默认90，每次新调用前查询官方额度，任一窗口已用达到阈值或额度未知即暂停；北京时间18:00停止，临近关闭时缩短模型超时。max_calls_per_day 缺省或 null 表示不按次数停止，可显式设正整数；升级不得清零实际调用计数。allow_unconfirmed_input=true 只用于已实际读取来源的评分证据批次，不复制给 CSV；评分仍先等待同日 CSV 稳定。
 
 用户授权建立新版本后，freeze-scores 保存不可变参考与快照，recalibrate 生成计划，再 --calibration-plan 应用。不可覆盖参考文件或混用版本。日常更新依原固定分布标化，公式/原始权重不变。
 

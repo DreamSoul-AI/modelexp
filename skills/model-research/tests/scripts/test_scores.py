@@ -46,6 +46,9 @@ class ScorePolicyTests(Workspace):
                 validate_observation({**observation, **bad}, {'LCB v6｜代码': 'f'}, source)
 
     def configure_scores(self):
+        clock = patch('scores.score_quota.seconds_until_close', return_value=3600)
+        clock.start()
+        self.addCleanup(clock.stop)
         c = read_json(self.config_path)
         role = c['roles'].pop('channels')
         role['identity'] = ['source_url', 'revision', 'name']
@@ -70,6 +73,56 @@ class ScorePolicyTests(Workspace):
         write_json(self.root / 'remote.json', {'tables': {'models': {'fields': schema, 'records': [
             {'record_id': 'r1', 'fields': {'f_source_url': 'https://example.org/model', 'f_revision': 'v1', 'f_name': 'Model', 'f_modalities': ['文本输出']}},
             {'record_id': 'r2', 'fields': {'f_source_url': 'https://example.org/embedding', 'f_revision': 'v1', 'f_name': 'Embedding', 'f_modalities': ['向量输出']}}]}}})
+
+    @case('integration', 'scores -> optional budget -> quota -> model', ('scores', 'quota'))
+    def test_absent_daily_cap_continues_existing_counter_past_twelve(self):
+        self.configure_scores()
+        counter = self.state.root / ('scores/calls-' + scores.now()[:10] + '.json')
+        write_json(counter, {'calls': 12})
+        collect, response = self.fixture()
+        with patch('scores.collect', side_effect=collect), patch('scores.score_quota.available', return_value=(True, {})), patch('scores.run_process', return_value=response) as model:
+            result = scores.execute(self.cfg, self.state, self.backend, '2026-11-17', 'apply')
+        self.assertEqual(model.call_count, 1)
+        self.assertEqual(result['model_calls'], 1)
+        self.assertEqual(read_json(counter)['calls'], 13)
+
+    @case('integration', 'scores -> explicit daily budget', ('scores', 'quota'))
+    def test_explicit_daily_cap_still_stops_without_resetting_counter(self):
+        self.configure_scores()
+        self.cfg['scores']['max_calls_per_day'] = 12
+        counter = self.state.root / ('scores/calls-' + scores.now()[:10] + '.json')
+        write_json(counter, {'calls': 12})
+        collect, _ = self.fixture()
+        with patch('scores.collect', side_effect=collect), patch('scores.run_process') as model:
+            result = scores.execute(self.cfg, self.state, self.backend, '2026-11-17', 'apply')
+        model.assert_not_called()
+        self.assertEqual(result['reason'], 'daily_model_budget_reached')
+        self.assertEqual(read_json(counter)['calls'], 12)
+
+    @case('integration', 'scores -> closing window -> pause', ('scores', 'schedule'))
+    def test_closed_window_stops_before_reading_sources_or_calling_model(self):
+        self.configure_scores()
+        with patch('scores.score_quota.seconds_until_close', return_value=0), patch('scores.collect') as sources, patch('scores.run_process') as model:
+            result = scores.execute(self.cfg, self.state, self.backend, '2026-11-17', 'apply')
+        sources.assert_not_called();model.assert_not_called()
+        self.assertEqual(result['reason'], 'daily_window_closed')
+
+    @case('integration', 'scores -> quota read crosses closing time', ('scores', 'schedule'))
+    def test_closing_time_is_rechecked_after_quota_query(self):
+        self.configure_scores();collect, _ = self.fixture()
+        with patch('scores.score_quota.seconds_until_close', side_effect=[60, 0]), patch('scores.collect', side_effect=collect), patch('scores.score_quota.available', return_value=(True, {})), patch('scores.run_process') as model:
+            result = scores.execute(self.cfg, self.state, self.backend, '2026-11-17', 'apply')
+        model.assert_not_called()
+        self.assertEqual(result['reason'], 'daily_window_closed')
+
+    @case('integration', 'scores -> model deadline bounded by 18:00', ('scores', 'schedule'))
+    def test_inflight_model_timeout_cannot_extend_beyond_closing_time(self):
+        self.configure_scores();collect, response = self.fixture()
+        with patch('scores.score_quota.seconds_until_close', return_value=10), patch('scores.collect', side_effect=collect), patch('scores.score_quota.available', return_value=(True, {})), patch('scores.run_process', return_value=response) as model:
+            scores.execute(self.cfg, self.state, self.backend, '2026-11-17', 'apply')
+        self.assertEqual(model.call_args.kwargs['timeout'], 10)
+        request = read_json(model.call_args.args[0][-1])
+        self.assertEqual(request['runtime']['timeout_seconds'], 5)
 
     def fixture(self, language=True, category='代码'):
         def collect(request):

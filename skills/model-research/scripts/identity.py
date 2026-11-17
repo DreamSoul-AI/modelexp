@@ -88,7 +88,14 @@ def source_value(value, field, rule=None):
         if value in allowed or not field.get('multiple'):
             value = [value]
         else:
-            value = [aliases.get(v.strip(), v.strip()) for v in re.split(r'[,，、;；／]', value) if v.strip()]
+            parts = [aliases.get(v.strip(), v.strip()) for v in re.split(r'[,，、;；／]', value) if v.strip()]
+            value = []
+            for part in parts:
+                # Preserve registered names such as C++, HumanEval+ and 文本+图像输入.
+                # A new separator is unambiguous only when every piece is a known option.
+                pieces = [aliases.get(v.strip(), v.strip()) for v in re.split(r'[+＋]', part)]
+                value.extend(pieces if part not in allowed and len(pieces) > 1
+                             and all(v in allowed for v in pieces) else [part])
     elif field['type'] == 'number':
         try:
             value = float(value)

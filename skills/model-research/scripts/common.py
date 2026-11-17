@@ -167,6 +167,10 @@ def load_config(path):
                     raise ResearchError('score credentials and calibration must stay outside checkout')
         if not scores.get('model') or not scores.get('codex_state_dir'):
             raise ResearchError('score model and private Codex state are required')
-        if not 1 <= scores.get('max_calls_per_day', 12) <= 100:
+        budget = scores.get('max_calls_per_day')
+        if budget is not None and (isinstance(budget, bool) or not isinstance(budget, int) or budget < 1):
             raise ResearchError('invalid daily score model budget')
+        threshold = scores.get('quota_stop_percent', 90)
+        if isinstance(threshold, bool) or not isinstance(threshold, (int, float)) or not 0 < threshold <= 100:
+            raise ResearchError('invalid score quota threshold')
     return cfg
