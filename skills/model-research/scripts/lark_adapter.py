@@ -256,6 +256,19 @@ class LarkAdapter:
         if not destination.is_file() or Path(result['saved_path']).resolve() != destination.resolve():
             raise ResearchError('download did not produce the requested file')
 
+    def markdown_fetch(self, token):
+        result = self.call(['markdown', '+fetch', '--file-token', token, '--as', 'user'])
+        if not isinstance(result.get('content'), str):
+            raise ResearchError('Markdown response is missing content')
+        return result['content']
+
+    def markdown_write(self, folder, path, token=None):
+        path = Path(path)
+        args = ['markdown', '+overwrite' if token else '+create', '--file', path.name,
+                '--name', 'README.md', '--as', 'user']
+        args += ['--file-token', token] if token else ['--folder-token', folder]
+        return self.call(args, cwd=path.parent, write=True)
+
     def doctor(self):
         # auth status has a management-specific contract rather than an ok/data envelope.
         try:

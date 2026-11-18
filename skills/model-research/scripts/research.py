@@ -83,7 +83,7 @@ def adopt(cfg, state, backend, batch_id, entity_id, record_id):
 def parser():
     result = argparse.ArgumentParser(description=__doc__)
     subs = result.add_subparsers(dest='command', required=True)
-    for name in ('doctor', 'inspect', 'ingest', 'plan', 'apply', 'verify', 'resume', 'run', 'validate', 'scores', 'freeze-scores', 'recalibrate', 'import-candidates', 'adopt', 'resolve-identity'):
+    for name in ('doctor', 'inspect', 'ingest', 'plan', 'apply', 'verify', 'resume', 'run', 'validate', 'scores', 'md-overview', 'freeze-scores', 'recalibrate', 'import-candidates', 'adopt', 'resolve-identity'):
         sub = subs.add_parser(name)
         sub.add_argument('--config', required=True)
         if name == 'scores':
@@ -92,14 +92,14 @@ def parser():
             sub.add_argument('--version', required=True)
         if name == 'recalibrate':
             sub.add_argument('--calibration-plan')
-        if name in ('ingest', 'run', 'validate', 'scores'):
+        if name in ('ingest', 'run', 'validate', 'scores', 'md-overview'):
             sub.add_argument('--date', required=True)
             sub.add_argument('--manifest')
         if name in ('plan', 'import-candidates', 'adopt'):
             sub.add_argument('--batch', required=True)
         if name in ('run', 'plan', 'import-candidates'):
             sub.add_argument('--candidates', required=name == 'import-candidates')
-        if name in ('run', 'scores'):
+        if name in ('run', 'scores', 'md-overview'):
             sub.add_argument('--mode', choices=('plan', 'apply'), default='plan')
         if name in ('apply', 'verify'):
             sub.add_argument('--plan', required=True)
@@ -125,6 +125,9 @@ def main(argv=None):
         date.fromisoformat(args.date)
         return demo(args.directory, args.date)
     cfg = load_config(args.config)
+    if args.command == 'md-overview':
+        import md_overview
+        return md_overview.execute(cfg, adapter_for(cfg), args.date, args.mode)
     state = State(cfg['_state'])
     backend = adapter_for(cfg)
     try:

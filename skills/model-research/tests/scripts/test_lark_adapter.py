@@ -11,6 +11,16 @@ from lark_adapter import LarkAdapter
 
 
 class AdapterTests(unittest.TestCase):
+    @case(target='lark_adapter.LarkAdapter.list_files', tags=('overview', 'pagination'))
+    def test_drive_inventory_exhausts_all_pages(self):
+        pages = [{'files': [{'token': str(i)} for i in range(200)], 'has_more': True, 'next_page_token': 'p2'},
+                 {'files': [{'token': '200'}], 'has_more': False}]
+        with patch.object(self.adapter, 'call', side_effect=pages) as call:
+            files = self.adapter.list_files('folder')
+        self.assertEqual(len(files), 201)
+        params = json.loads(call.call_args_list[1].args[0][4])
+        self.assertEqual(params['page_token'], 'p2')
+
     @case(target='lark_adapter.LarkAdapter.snapshot', tags=('scores', 'projection'))
     def test_more_than_fifty_fields_are_read_in_consistent_chunks(self):
         schema = [{'id': 'f'+str(i), 'name': 'N'+str(i), 'type': 'number'} for i in range(74)]

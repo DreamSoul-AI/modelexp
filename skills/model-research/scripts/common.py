@@ -96,6 +96,11 @@ def load_config(path):
     if isinstance(size, bool) or not isinstance(size, int) or not 1 <= size <= 200:
         raise ResearchError('backend.batch_size must be between 1 and 200')
     readiness = cfg.get('input_readiness', {})
+    overview = cfg.get('md_overview', {})
+    if 'enabled' in overview and not isinstance(overview['enabled'], bool):
+        raise ResearchError('md_overview.enabled must be a boolean')
+    if overview.get('enabled') and not overview.get('folder_token'):
+        raise ResearchError('md_overview.folder_token is required')
     if readiness:
         interval = readiness.get('min_interval_seconds')
         if readiness.get('strategy') != 'stable_observations' or isinstance(interval, bool) or not isinstance(interval, (int, float)) or not 60 <= interval <= 3600:

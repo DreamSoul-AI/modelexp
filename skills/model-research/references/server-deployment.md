@@ -10,6 +10,8 @@ Python 3.11+、Node.js、官方 lark-cli 与 Codex CLI。专用普通用户运�
 
 ## 配置
 
+若需维护 MD 总览，只在 CSV 配置添加 `md_overview.enabled=true` 和已核实的 `md_overview.folder_token`，指向日报的 md 文件夹。CSV apply 每轮结束后独立执行总览步骤，缺 CSV 或 CSV 部分失败不阻塞该步骤；validate、scores 不执行。先用 `research.py md-overview --mode plan` 预览完整统计，再 apply 创建或更新唯一 README.md，回读验证并重复执行确认无重复文件。正文及其他目录保持；扫描不完整保留上次完整索引，人工冲突或未知提交不盲目覆盖。
+
 CSV allow_writes=true；validate allow_writes=false，validation.baseline_state_dir 只读指向 CSV state。两者映射同一批字段。Grokbot 用根目录 token 与具名子目录，不递归混入 md 或 backfill。量化为可选的当日输入，明确27列映射和两列待处理边界。
 
 每日 run 按表隔离接收、稳定观察、计划和写回；一表缺失或失败不阻塞其他表。分别查看总报告 roles 和 CSV `state/daily/<role>-latest.json`，不把总体 partial 理解为全部未同步。评分只等当天模型表稳定且 completed；scores.sync_state_dir 指向 CSV state，缺省为 sync_root/state。每表 apply 结束立即发布回执，因此评分不必等待整个 CSV worker。校验逐表扫描并保存聚合报告，缺失或损坏的输入仍明确报告。

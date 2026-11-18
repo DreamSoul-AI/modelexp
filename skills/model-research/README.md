@@ -33,6 +33,12 @@ python3 skills/model-research/scripts/research.py scores --config <评分配置>
 
 每日 run 按表独立执行：缺文件、文件晚到、解析或表格访问失败只影响相应表，其他就绪表继续同步。每表单独记录稳定观察，晚到文件不会重置其他表的计时；缺可选量化文件标记 skipped。报告 roles 中逐表查看 completed、waiting_input、partial 等状态，总体 partial 仍可能包含已验证写回。每表完成即保存 `state/daily/<role>-latest.json`，评分只依赖当天模型表 completed 且 observed_stable/producer_confirmed；不等待其他表或整个 CSV worker 结束。校验也逐表执行，保留总报告，不因一份 CSV 损坏而跳过其他表比较。
 
+## MD 资料总览
+
+CSV 配置可启用 `md_overview: {"enabled": true, "folder_token": "<已确认的 md 文件夹 token>"}`。每次定时 CSV apply 任务结束后，即使输入缺失或部分失败，也独立扫描 md/ 全部子目录，更新唯一 README.md，列出全库正文数、类别数、日期分组、目录统计及真实飞书文件链接。排除总览和其他 README/INDEX/_index.md；按文件计数，不按模型名称去重，不推断正文调研状态。扫描不完整时标注异常并保留上次完整索引；检测到人工修改或未知提交则保存候选并停止覆盖，不重复新建。每天及内容有变化时才发布新版本，同日未变只核验。
+
+使用 `research.py md-overview --config <CSV配置> --date <日期> --mode plan|apply` 可手动预览或更新。它只读取文件元信息、不调用模型、不修改正文，也不生成每日变更摘要。当前统计、候选、发布回执和旧版本保存在 CSV state/md-overview/，任务结果保存在服务 last-run.md_overview，校验与评分任务不执行该写入。
+
 ## 评分与冻结版本
 
 只处理输出文字的生成式语言模型；专项和基座单列，多模态模型只取本配置明确的文字能力成绩。字段仅限代码、Agent、数学；科学、通用、指令遵循不参与维护。新 Benchmark 输出三能力内映射候选，不自动扩充能力或修改公式权重。

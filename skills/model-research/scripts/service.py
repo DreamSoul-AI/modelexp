@@ -162,6 +162,21 @@ def tick(root, business_date=None):
             report['worker_result'] = str(private)
         except subprocess.TimeoutExpired:
             report.update(status='error', reason='worker exceeded its configured deadline')
+        if settings['mode'] == 'apply' and cfg.get('md_overview', {}).get('enabled'):
+            # Run independently of missing/failed CSV inputs, and never from validate or scores.
+            overview_command = [settings['python'], str(script), 'md-overview', '--config', settings['config'],
+                                '--date', business_date, '--mode', 'apply']
+            try:
+                overview = run_process(overview_command, timeout=300)
+                private = root / 'md-overview-results' / (now().replace(':', '-') + '-' + str(os.getpid()) + '.json')
+                write_json(private, {'exit_code': overview.returncode, 'stdout': overview.stdout, 'stderr': overview.stderr})
+                if overview.returncode not in (0, 3):
+                    raise ResearchError('overview worker failed; inspect private result')
+                report['md_overview'] = json.loads(overview.stdout)
+            except (ResearchError, OSError, ValueError, subprocess.TimeoutExpired) as exc:
+                report['md_overview'] = {'status': 'partial', 'reason': 'overview_update_failed', 'error_type': type(exc).__name__}
+            if report['md_overview'].get('status') != 'completed' and report['status'] == 'completed':
+                report['status'] = 'partial'
         report['finished_at'] = now()
         write_json(root / 'last-run.json', report)
         write_json(root / 'runs' / (digest(report)[:24] + '.json'), report)
