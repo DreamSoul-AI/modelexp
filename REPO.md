@@ -66,3 +66,7 @@
 ## 定稿与服务器移交
 
 版本0.6已提供finalize-md和export-md。Git研究报告位于reports/model-research，只含已生成正文和来源；原CSV、私有配置、SQLite、认证及人工笔记不发布。模板清理只能删除完全匹配的系统占位章节，必须保留人工扩写、代码围栏及生成段指纹。服务器部署及状态迁移依照skills/model-research/references/server-deployment.md；持久在线和新服务器验收仍待用户租用主机后完成。
+
+## Workspace 采用记录
+
+- 来源 [Workspace 098bd2e](https://github.com/DreamSoul-AI/workspace/tree/098bd2eccf23eb1e6d77a3eec6db51e6bc387daf)。采用范围为Learnings 命名与分发、文档规范配置、长作业检查点与恢复、调研、研究计划与研究结论归档、发布前分支对齐。项目专用流程见本文件。

@@ -42,3 +42,11 @@
 ## 经验记录
 
 - 可复用的研发经验按实际接收仓库归入 `docs/经验 Learnings/`。汇总用 `<接收仓库名>.md`，专题用 `<接收仓库名>-<主题>.md`，如 `workspace.md`、`Figma-原型验证.md`。已有条目补充做法和证据。Workspace 按原定接收仓库合并同类项并分发。
+
+## 文档、作业与发布
+
+- 默认文档规范及场景偏好从 USER.md 读取，结合项目已确认的约定与对应专项内容规范。发布到飞书时按[飞书文档规范](https://dreamsoul.feishu.cn/docx/DdmxdrNvBo9AMXxkAYmc4EJ6nwe) 适配正文与原生引用。文档名称准确反映内容，源码与配置按自身规范
+- 长时后台作业记录作业标识、日志和可用的检查点位置。收到暂停或收尾要求时，按项目支持的方式保存进度并核实作业状态。恢复前先核对原作业和实际进度，再决定接续或重启
+- 采用开发分支向主分支发布时，提交发布 PR 前先核对开发分支已包含主分支的最新改动。
+- 研究项目形成阶段性结论时，放入 `docs/研究记录 Research Record/`，按「日期 主题.md」命名，由文档索引导航。每篇先回答核心研究问题，再说明已验证条件、尚待验证的问题和证据来源。实验过程与原始输出链接到运行记录，实现细节链接到开发记录。多批实验需要形成综合判断时，可另设 `docs/研究报告 Research Report/`，并链接对应研究记录。
+- 调研按适用规范核对首稿覆盖、证据和交付验收，研究计划按课题参考相应规范。 [通用调研规范](https://dreamsoul.feishu.cn/docx/YcWIdE4INoLqoLxR5O8cbl7hnTf) · [文献调研规范](https://dreamsoul.feishu.cn/docx/QKXhdAW2doZCvUxHSoFcpT0Mn5e) · [研究计划规范](https://dreamsoul.feishu.cn/docx/POdQdHYeqo7ujpxmJH1ctOMPn1g)
