@@ -38,3 +38,7 @@
 - [文献调研规范](https://dreamsoul.feishu.cn/docx/QKXhdAW2doZCvUxHSoFcpT0Mn5e)、[研究计划规范](https://dreamsoul.feishu.cn/docx/POdQdHYeqo7ujpxmJH1ctOMPn1g)：论文与科学研究任务按需读取，不将工程计划当研究计划。
 
 入口不是已读声明；按当前任务读取相关正文，不能据此声称已全面验证所有规范。
+
+## 经验记录
+
+- 可复用的研发经验按实际接收仓库归入 `docs/经验 Learnings/`。汇总用 `<接收仓库名>.md`，专题用 `<接收仓库名>-<主题>.md`，如 `workspace.md`、`Figma-原型验证.md`。已有条目补充做法和证据。Workspace 按原定接收仓库合并同类项并分发。
