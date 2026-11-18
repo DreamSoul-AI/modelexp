@@ -176,6 +176,10 @@ def execute(cfg, state, batch, backend):
               'remote_writes': 0, 'model_calls': False, 'factual_verification': False,
               'scope': 'mapped fields in all configured tables; compare only current CSV rows; historical rows are retained',
               'tables': tables, 'counts': counts, 'issues': issues}
+    return save_report(state, report)
+
+
+def save_report(state, report):
     report_id = 'validation_' + digest(report)[:24]
     folder = state.root / 'validation'
     report['report_path'] = str(folder / (report_id + '.json'))
@@ -185,7 +189,7 @@ def execute(cfg, state, batch, backend):
                'field', 'field_name', 'expected', 'actual', 'detail']
     writer = csv.DictWriter(stream, fieldnames=columns, extrasaction='ignore')
     writer.writeheader()
-    for entry in issues:
+    for entry in report['issues']:
         writer.writerow({k: json.dumps(v, ensure_ascii=False) if isinstance(v, (dict, list)) else v
                          for k, v in entry.items()})
     atomic_write(Path(report['issues_csv']), '\ufeff' + stream.getvalue())

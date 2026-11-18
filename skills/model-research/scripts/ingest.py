@@ -50,13 +50,14 @@ def input_folder(source, drive):
     return folder
 
 
-def ingest(cfg, state, business_date, drive=None, manifest_path=None):
+def ingest(cfg, state, business_date, drive=None, manifest_path=None, *, role=None):
     date.fromisoformat(business_date)
     manifest = read_json(manifest_path) if manifest_path else None
     if manifest and (manifest.get('business_date') != business_date or manifest.get('complete') is not True):
         raise ResearchError('producer manifest must confirm the selected business date and completion')
     items, sources, issues = [], [], []
-    for role, spec in cfg['roles'].items():
+    selected = {role: cfg['roles'][role]} if role else cfg['roles']
+    for role, spec in selected.items():
         source = spec.get('input')
         if not source:
             continue
@@ -143,9 +144,11 @@ def ingest(cfg, state, business_date, drive=None, manifest_path=None):
     rule = cfg.get('input_readiness', {})
     if not manifest and rule.get('strategy') == 'stable_observations':
         signature = digest({'sources': source_keys, 'ready': ready})
-        stable = state.observe_inputs(business_date, signature, observed_at, rule['min_interval_seconds'])
+        # Independent daily deliveries must not reset each other's stability clock.
+        observation_key = business_date + ':' + next(iter(selected)) if len(selected) == 1 else business_date
+        stable = state.observe_inputs(observation_key, signature, observed_at, rule['min_interval_seconds'])
         readiness = 'observed_stable' if stable and ready else 'observing'
-    fingerprint = {'date': business_date, 'sources': source_keys, 'config': cfg['_hash'],
+    fingerprint = {'date': business_date, 'roles': sorted(selected), 'sources': source_keys, 'config': cfg['_hash'],
                    'readiness': readiness, 'issues': issues}
     batch_id = 'batch_' + digest(fingerprint)[:24]
     batch = {'schema_version': 1, 'batch_id': batch_id, 'business_date': business_date, 'received_at': now(),

@@ -139,6 +139,10 @@ def main(argv=None):
             if args.command == 'scores':
                 import scores
                 return scores.execute(cfg, state, backend, args.date, args.mode, record_ids=args.record_id)
+            if args.command == 'validate' or args.command == 'run' and not args.candidates:
+                import daily
+                return daily.execute(cfg, state, backend, args.date,
+                                     'validate' if args.command == 'validate' else args.mode, args.manifest)
             if args.command == 'doctor':
                 result = backend.doctor()
                 result.update(state_dir=str(state.root), allow_writes=cfg.get('allow_writes', False))

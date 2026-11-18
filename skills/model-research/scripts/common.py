@@ -160,7 +160,7 @@ def load_config(path):
     if scores.get('enabled'):
         if set(cfg['roles']) != {'models'}:
             raise ResearchError('score maintenance must use a separate models-only configuration')
-        for key in ('codex_state_dir', 'reference_file'):
+        for key in ('codex_state_dir', 'reference_file', 'sync_state_dir'):
             if scores.get(key):
                 scores[key] = str((path.parent / scores[key]).resolve())
                 if Path(scores[key]).is_relative_to(checkout):

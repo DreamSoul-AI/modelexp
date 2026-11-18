@@ -135,6 +135,41 @@ class ScorePolicyTests(Workspace):
                                               'benchmark_version': 'v6', 'configuration': 'no tools'}], 'new_benchmarks': []}]}
         return collect, subprocess.CompletedProcess([], 0, json.dumps(packet), '')
 
+    @case('integration', 'scores -> model receipt while other tables pending', ('scores', 'readiness'))
+    def test_completed_model_receipt_unblocks_scoring_before_whole_csv_worker_finishes(self):
+        self.configure_scores();collect, response = self.fixture()
+        self.cfg['scores'].update(sync_root=str(self.root / 'csv'), sync_state_dir=str(self.root / 'csv-state'))
+        write_json(self.root / 'csv/last-run.json', {'business_date': '2026-11-17', 'status': 'waiting_input'})
+        write_json(self.root / 'csv-state/daily/models-latest.json',
+                   {'business_date': '2026-11-17', 'status': 'completed', 'readiness': 'observed_stable'})
+        with patch('scores.collect', side_effect=collect), patch('scores.score_quota.available', return_value=(True, {})), patch('scores.run_process', return_value=response) as model:
+            result = scores.execute(self.cfg, self.state, self.backend, '2026-11-17', 'apply')
+        self.assertEqual(model.call_count, 1)
+        self.assertEqual(result['processed'], 1)
+
+    @case('integration', 'scores -> partial or stale model receipt -> wait', ('scores', 'readiness'))
+    def test_missing_failed_or_old_model_sync_cannot_be_bypassed_by_other_tables(self):
+        self.configure_scores()
+        self.cfg['scores'].update(sync_root=str(self.root / 'csv'))
+        path = self.root / 'csv/state/daily/models-latest.json'
+        for date, status, readiness in (('2026-11-16', 'completed', 'observed_stable'),
+                                        ('2026-11-17', 'partial', 'observed_stable'),
+                                        ('2026-11-17', 'completed', 'observing')):
+            write_json(path, {'business_date': date, 'status': status, 'readiness': readiness})
+            with patch('scores.collect') as collect, patch('scores.run_process') as model:
+                result = scores.execute(self.cfg, self.state, self.backend, '2026-11-17', 'apply')
+            collect.assert_not_called();model.assert_not_called()
+            self.assertEqual(result['reason'], 'waiting_csv_sync')
+
+    @case(target='scores.csv_model_ready', tags=('scores', 'readiness'))
+    def test_role_summary_checks_models_instead_of_overall_readiness(self):
+        report = {'business_date': '2026-11-17', 'status': 'partial', 'result': {'readiness': 'observing',
+                  'roles': {'models': {'status': 'completed', 'readiness': 'observed_stable'},
+                            'channels': {'status': 'waiting_input'}}}}
+        self.assertTrue(scores.csv_model_ready(report, '2026-11-17'))
+        report['result']['roles'].pop('models')
+        self.assertFalse(scores.csv_model_ready(report, '2026-11-17'))
+
     @case('integration', 'scores -> sources -> model -> guarded apply -> readback', ('scores', 'writeback'))
     def test_classification_and_evidence_apply_but_uncalibrated_scores_stay_candidates(self):
         self.configure_scores();collect, response = self.fixture()

@@ -32,6 +32,15 @@ def cached_response(folder, request, exclude):
             return read_json(run/'response.json'), str(run)
     return None, None
 
+def csv_model_ready(report, business_date):
+    summary = report.get('result') or {}
+    model = summary.get('roles', {}).get('models', {}) if 'roles' in summary else summary
+    status = model.get('status') if 'roles' in summary else report.get('status')
+    allowed = ('completed',) if 'roles' in summary else ('completed', 'partial')
+    return (report.get('business_date') == business_date and status in allowed
+            and model.get('readiness') in ('observed_stable', 'producer_confirmed'))
+
+
 def execute(cfg, state, backend, business_date, mode='plan', record_ids=None):
     settings = cfg.get('scores', {})
     if mode not in ('plan', 'apply') or mode == 'apply' and not cfg.get('allow_writes'):
@@ -44,8 +53,14 @@ def execute(cfg, state, backend, business_date, mode='plan', record_ids=None):
     if settings.get('sync_root'):
         previous = Path(settings['sync_root']) / 'last-run.json'
         sync_result = read_json(previous) if previous.exists() else {}
-        if (sync_result.get('business_date') != business_date or sync_result.get('status') not in ('completed', 'partial')
-                or (sync_result.get('result') or {}).get('readiness') not in ('observed_stable', 'producer_confirmed')):
+        receipt = Path(settings.get('sync_state_dir', str(Path(settings['sync_root']) / 'state'))) / 'daily/models-latest.json'
+        if receipt.exists():
+            model_sync = read_json(receipt)
+            synced = (model_sync.get('business_date') == business_date and model_sync.get('status') == 'completed'
+                      and model_sync.get('readiness') in ('observed_stable', 'producer_confirmed'))
+        else:
+            synced = csv_model_ready(sync_result, business_date)
+        if not synced:
             return {'status': 'partial', 'business_date': business_date, 'reason': 'waiting_csv_sync',
                     'readiness': 'observing', 'processed': 0, 'model_calls': 0, 'remote_writes': 0}
     spec = cfg['roles']['models']

@@ -10,7 +10,7 @@
 | validate | 四表字段规则及 CSV/线上逐项核对；只输出问题，不修表 | 无 |
 | scores | 文字输出的生成式语言模型；来源变化检查、三能力成绩及证据维护 | 官方 Codex CLI |
 
-每天北京时间12:00开始、18:00前重试；评分等待同业务日 CSV 稳定。安装时可用 `--start-date YYYY-MM-DD` 设置首次自动业务日，服务提前启动只待机，历史回放仍须显式指定日期。三套配置、state 与锁分开。没有当日文件时明确等待，不能把旧成功记录当今天完成。
+每天北京时间12:00开始、18:00前重试；评分只等待同业务日模型表稳定并同步完成。安装时可用 `--start-date YYYY-MM-DD` 设置首次自动业务日，服务提前启动只待机，历史回放仍须显式指定日期。三套配置、state 与锁分开。没有当日文件时明确等待，不能把旧成功记录当今天完成。
 
 ## Grokbot 输入
 
@@ -30,6 +30,8 @@ python3 skills/model-research/scripts/research.py scores --config <评分配置>
 ```
 
 同步配置显式允许写入；校验必须 allow_writes=false。旧 agent.enabled/command 不可启用；评分使用独立 scores 配置。无 manifest 时至少两次一致内容且间隔60秒才允许同步。无基线的非空值保留，后续三方比较保护人工修改，未知提交先 verify/resume，不按 CSV 缺行删除历史记录。
+
+每日 run 按表独立执行：缺文件、文件晚到、解析或表格访问失败只影响相应表，其他就绪表继续同步。每表单独记录稳定观察，晚到文件不会重置其他表的计时；缺可选量化文件标记 skipped。报告 roles 中逐表查看 completed、waiting_input、partial 等状态，总体 partial 仍可能包含已验证写回。每表完成即保存 `state/daily/<role>-latest.json`，评分只依赖当天模型表 completed 且 observed_stable/producer_confirmed；不等待其他表或整个 CSV worker 结束。校验也逐表执行，保留总报告，不因一份 CSV 损坏而跳过其他表比较。
 
 ## 评分与冻结版本
 

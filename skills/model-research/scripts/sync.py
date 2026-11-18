@@ -1,5 +1,6 @@
 """Field-level three-way planning, guarded application, and conservative reconciliation."""
 from collections import Counter
+from functools import lru_cache
 from pathlib import Path
 import hashlib
 import re
@@ -88,11 +89,17 @@ def make_operation(kind, item, fields, old, record_id, schema_hash, proof):
     return {**data, 'operation_id': 'op_' + digest(data)[:32]}
 
 
+@lru_cache(maxsize=32768)
+def canonical_guard_text(value):
+    # Cache only the pure text conversion, never records or write decisions.
+    return re.sub(r'[^\w]', '', value.casefold())
+
+
 def creation_blocker(item, spec, fields, records, unidentified):
     guards = spec.get('creation_guard_keys', [])
     if unidentified and not guards:
         return 'unidentified_remote_records_block_creation'
-    canonical = lambda value: re.sub(r'[^\w]', '', str(value).casefold())
+    canonical = lambda value: canonical_guard_text(str(value))
     target = dict(item['identity'])
     guard_values = {key: item.get('raw_fields', {}).get(key) or item.get('fields', {}).get(key) or target.get(key) for key in guards}
     if any(not value for value in guard_values.values()):
@@ -369,7 +376,7 @@ def apply(cfg, state, document, backend, verify_only=False):
               'started_at': now(), 'status': 'running', 'results': [], 'issues': document['issues']}
     state.save_run(report)
     batching = not verify_only and cfg.get('backend', {}).get('batch_size', 1) > 1
-    snapshots, queued = {}, []
+    snapshots, indexes, queued = {}, {}, []
     for op in document['operations']:
         eid, role, op_id = op['entity_id'], op['role'], op['operation_id']
         spec = cfg['roles'][role]
@@ -382,9 +389,13 @@ def apply(cfg, state, document, backend, verify_only=False):
                 state.mark(op_id, document['plan_id'], 'planned', op['record_id'], entity=eid)
             if not batching or role not in snapshots:
                 snapshots[role] = backend.snapshot(role, spec)
+                schema, records = snapshots[role]
+                indexes[role] = (*remote_index(role, spec, schema, records), schema_fingerprint(schema))
             schema, records = snapshots[role]
-            fields, index, unidentified = remote_index(role, spec, schema, records)
-            if schema_fingerprint(schema) != op['schema_hash'] and not verify_only:
+            # Reuse derived data only for this same snapshot. submit_batches obtains a fresh
+            # snapshot and rechecks every accepted write before sending any request.
+            fields, index, unidentified, current_schema_hash = indexes[role]
+            if current_schema_hash != op['schema_hash'] and not verify_only:
                 raise ResearchError('schema changed after planning')
             matches = index.get(eid, [])
             if len(matches) > 1:
