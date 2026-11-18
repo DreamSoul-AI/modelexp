@@ -28,3 +28,7 @@
 先读 AGENTS.md 和当前[文档导航](docs/README.md)，再按需要读规范。仓内 `.agents/skills` 当前主机未恢复，不能把 `skills-lock.json` 当成已安装证明；已按任务读取官方 lark-base 视图参考和 CLI 帮助。自动化测试必须保存逐用例结果；真实联网和进程存活分别验收。
 
 旧 Markdown 生成器、队列、导出兼容工具及过时报告快照已从当前源码清理；历史在 Git 与仓外归档保留。私有运行状态、历史证据、人工笔记和授权不随清理删除。
+
+## Workspace 采用记录
+
+- 来源 [Workspace 098bd2e](https://github.com/DreamSoul-AI/workspace/tree/098bd2eccf23eb1e6d77a3eec6db51e6bc387daf)。采用范围为Learnings 命名与分发、文档规范配置、长作业检查点与恢复、调研、研究计划与研究结论归档、发布前分支对齐。项目专用流程见本文件。
