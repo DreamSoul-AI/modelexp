@@ -74,7 +74,7 @@ def file_receipt(path, root, rows=None):
             **({'rows': rows} if rows is not None else {})}
 
 
-def verify_bundle(cfg, drive, root, day):
+def verify_bundle(cfg, drive, root, day, *, coverage=None):
     templates = read_json(ASSETS / 'daily-delivery-columns.json')
     roots, receipts, table_counts, options = {}, [], {}, {}
     for role in ROLES:
@@ -87,8 +87,10 @@ def verify_bundle(cfg, drive, root, day):
         if role == 'artifacts' and not path.exists() and source.get('required') is False:
             continue
         rows = csv_rows(path, headers)
-        if not rows:
+        if not rows and (coverage or {}).get('table_rows', {}).get(role) != 0:
             raise ResearchError('header-only CSV needs an explicit completion handoff: ' + path.name)
+        if coverage and coverage.get('table_rows', {}).get(role) != len(rows):
+            raise ResearchError('coverage row count differs: ' + path.name)
         options[role] = verify_rows(role, rows, headers, spec, drive.schema(spec))
         table_counts[role] = len(rows)
         roots[source['subdirectory'][0]] = folder
@@ -109,7 +111,7 @@ def verify_bundle(cfg, drive, root, day):
     receipts.append(file_receipt(path, root, len(links)))
 
     md_files = sorted((root / 'md' / day).glob('*.md'))
-    if not md_files:
+    if not md_files and (coverage is None or table_counts['models'] or table_counts['benchmarks']):
         raise ResearchError('daily Markdown folder is empty')
     for path in md_files:
         if not DOC_NAME.fullmatch(path.name):
@@ -146,10 +148,13 @@ def publish(cfg, drive, root, report, roots, journal):
     day = report['business_date']
     source = cfg['roles']['models']['input']
     parent = source.get('root_folder_token') or source.get('folder_token')
+    markdown_names = {Path(f['path']).name for f in report['files'] if f['path'].startswith('md/')}
     md = unique_item(drive, parent, 'md', 'folder')
     if md is None:
         raise ResearchError('confirmed md root is missing')
     md_day = unique_item(drive, md['token'], day, 'folder')
+    if md_day and any(item['name'] not in markdown_names for item in drive.list_files(md_day['token'])):
+        raise ResearchError('existing date folder contains files outside this bundle; resolve producer overlap')
     entries = {}
     for f in report['files']:
         path = root / f['path']
@@ -160,7 +165,7 @@ def publish(cfg, drive, root, report, roots, journal):
         if not item and f['path'] in journal['pending']:
             raise UncertainWrite('previous submission not found; reconcile before creating: ' + f['path'])
         entries[f['path']] = item
-    if md_day is None:
+    if markdown_names and md_day is None:
         if 'md/' + day in journal['pending']:
             raise UncertainWrite('previous folder submission not visible')
         journal['pending'].append('md/' + day)
@@ -198,6 +203,22 @@ def publish(cfg, drive, root, report, roots, journal):
     return journal['verified']
 
 
+def publish_bundle(cfg, drive, root, report, roots):
+    if not cfg.get('allow_writes'):
+        raise ResearchError('publish requires the authorized write configuration')
+    state_dir = Path(cfg['_state']) / 'delivery'
+    state_dir.mkdir(mode=0o700, exist_ok=True)
+    journal_path = state_dir / (report['business_date'] + '.json')
+    with (state_dir / 'publish.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        journal = read_json(journal_path) if journal_path.exists() else {'pending': [], 'verified': {}}
+        current_digest = digest(report['files'])
+        if journal.get('bundle_sha256', current_digest) != current_digest:
+            raise ResearchError('a different bundle has an existing journal for this date')
+        journal.update(path=str(journal_path), bundle_sha256=current_digest)
+        return publish(cfg, drive, root, report, roots, journal)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('mode', choices=['check', 'publish'])
@@ -211,24 +232,26 @@ def main():
     if not isinstance(drive, LarkAdapter):
         raise ResearchError('delivery requires the live Feishu schema')
     root = args.bundle.resolve()
-    report, roots = verify_bundle(cfg, drive, root, day)
+    coverage_path = root / 'coverage.json'
+    coverage = read_json(coverage_path) if coverage_path.is_file() else None
+    if coverage and (coverage.get('business_date') != day or coverage.get('status') != 'accepted'):
+        coverage = None
     if args.mode == 'publish':
-        coverage = read_json(root / 'coverage.json')
-        if coverage.get('business_date') != day or coverage.get('status') != 'accepted':
+        if not coverage:
             raise ResearchError('publish requires an accepted daily coverage review')
-        if not cfg.get('allow_writes'):
-            raise ResearchError('publish requires the authorized write configuration')
-        state_dir = Path(cfg['_state']) / 'delivery'
-        state_dir.mkdir(mode=0o700, exist_ok=True)
-        journal_path = state_dir / (day + '.json')
-        with (state_dir / 'publish.lock').open('a') as lock:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            journal = read_json(journal_path) if journal_path.exists() else {'pending': [], 'verified': {}}
-            current_digest = digest(report['files'])
-            if journal.get('bundle_sha256', current_digest) != current_digest:
-                raise ResearchError('a different bundle has an existing journal for this date')
-            journal.update(path=str(journal_path), bundle_sha256=current_digest)
-            report['published'] = publish(cfg, drive, root, report, roots, journal)
+        from daily_history import collect_history, has_history_match, row_keys
+        with tempfile.TemporaryDirectory(dir=drive.root) as temp:
+            history, _ = collect_history(cfg, drive, Path(temp), day)
+        templates = read_json(ASSETS / 'daily-delivery-columns.json')
+        for role, keys in history.items():
+            source = cfg['roles'][role]['input']
+            template = '/'.join(source['subdirectory'] + [source['filename']])
+            if any(has_history_match(row_keys(role, row), keys) for row in
+                   csv_rows(root / template.format(date=day), templates[template])):
+                raise ResearchError(role + ' delivery repeats a historical entity')
+    report, roots = verify_bundle(cfg, drive, root, day, coverage=coverage)
+    if args.mode == 'publish':
+        report['published'] = publish_bundle(cfg, drive, root, report, roots)
     write_json(root / 'delivery-check.json', report)
     print(json.dumps(report, ensure_ascii=False, indent=2))
 

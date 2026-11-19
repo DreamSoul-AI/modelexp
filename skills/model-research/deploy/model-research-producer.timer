@@ -1,0 +1,10 @@
+[Unit]
+Description=Start Codex model research at 12:00 Beijing time and retry until 18:00
+
+[Timer]
+OnCalendar=*-*-* 12..17:00/15:00 Asia/Shanghai
+AccuracySec=1s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

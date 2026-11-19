@@ -7,6 +7,8 @@ from types import SimpleNamespace
 from support import case
 from common import ResearchError
 from daily_delivery import csv_rows, file_receipt, publish, unique_item, verify_rows
+from daily_history import entity_keys, has_history_match, history_file_rows
+from daily_producer import candidate_rows
 from lark_adapter import UncertainWrite
 
 
@@ -77,3 +79,35 @@ class DeliveryTests(unittest.TestCase):
             self.assertEqual(len(calls), 1)
             self.assertEqual(next(iter(recovered.values()))['token'], 'written')
             self.assertEqual(journal['pending'], [])
+
+    @case(target='daily_history -> candidate_rows', tags=('delivery', 'deduplication'))
+    def test_known_entity_is_not_reported_at_a_new_url_variant_or_revision(self):
+        historical = history_file_rows('models', ('模型名称,获取地址\nOld name,https://hf.co/Org/Existing/tree/old\n').encode())
+        history = {'models': historical[0], 'benchmarks': entity_keys(
+            'benchmarks', 'Known-Bench', 'https://arxiv.org/abs/2611.12345v1')}
+        excerpt = 'This is a real quote from the fixed version.'
+        items = [{'id': 'm', 'role': 'models', 'url': 'https://huggingface.co/org/existing', 'excerpt': excerpt},
+                 {'id': 'b', 'role': 'benchmarks', 'url': 'https://github.com/org/replacement', 'excerpt': excerpt}]
+        base = {'include': True, 'publisher': '', 'intro': '简介', 'quote': excerpt, 'limitations': '', 'columns': []}
+        decisions = [{**base, 'id': 'm', 'name': 'New title'},
+                     {**base, 'id': 'b', 'name': 'Ｋnown BENCH'}]
+        for item in items:
+            item.update(repo='org/new-label', revision='a' * 40, source=item['url'])
+        self.assertEqual(list(candidate_rows(items, decisions, history, {'models': [], 'benchmarks': []},
+                                             '2026-11-20')), [])
+        previous = entity_keys('artifacts', '4-bit', 'https://hf.co/Org/Q/blob/old/one.gguf')
+        same = entity_keys('artifacts', 'other title', 'https://huggingface.co/org/q/resolve/new/one.gguf')
+        different = entity_keys('artifacts', 'new title', 'https://huggingface.co/org/q/resolve/new/two.gguf')
+        self.assertTrue(has_history_match(same, previous))
+        self.assertFalse(has_history_match(different, previous))
+
+    @case(target='daily_delivery.publish', tags=('delivery', 'conflict'))
+    def test_daily_folder_from_another_producer_blocks_even_a_zero_new_day(self):
+        day = '2026-11-20'
+        folders = {'root': [{'name': 'md', 'type': 'folder', 'token': 'md'}],
+                   'md': [{'name': day, 'type': 'folder', 'token': 'day'}],
+                   'day': [{'name': 'models_org__existing_abc1234.md', 'type': 'file'}]}
+        drive = SimpleNamespace(list_files=lambda token: folders[token])
+        cfg = {'roles': {'models': {'input': {'root_folder_token': 'root'}}}}
+        with self.assertRaisesRegex(ResearchError, 'outside this bundle'):
+            publish(cfg, drive, Path('/unused'), {'business_date': day, 'files': []}, {}, {})

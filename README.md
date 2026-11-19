@@ -50,8 +50,9 @@ See `requirements.txt`
 
 ## Model 资料与评测维护（gyd）
 
-此分支在原训练流程之外提供三个独立任务：Grokbot CSV 增量同步、只读字段/一致性校验、语言模型代码/Agent/数学评分维护。Markdown 由 Grokbot 管理，专项和基座单列；不生成正文、研究队列或每日摘要。
+此分支在原训练流程之外提供 Codex 日报生产、CSV 增量同步、只读字段与一致性校验，以及语言模型代码、Agent、数学评分维护。日报生产交付 CSV 和调研 Markdown，评分维护保留专项与基座单列。
 
+- [Codex 日报完整工作流程](docs/Codex模型日报完整工作流程.md)
 - [使用指南](skills/model-research/README.md)与[Skill](skills/model-research/SKILL.md)
 - [文档导航](docs/README.md)与[项目约定](REPO.md)
 - [服务器部署与验收](skills/model-research/references/server-deployment.md)

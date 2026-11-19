@@ -1,5 +1,6 @@
 """Run independent table deliveries with shared identity and baseline protection."""
 from collections import Counter
+from pathlib import Path
 from common import ResearchError, inside, now, read_json, write_json
 from evidence import prepare_dossiers
 from dossiers import write_index
@@ -57,16 +58,28 @@ def execute(cfg, state, backend, business_date, mode, manifest=None):
             except (ResearchError, OSError, ValueError) as exc:
                 reconciliation.append({'plan_id': plan_id, 'status': 'unresolved', 'reason': str(exc)})
     started_at = now()
+    handoff = cfg.get('input_handoff')
+    requires_handoff = handoff and business_date >= handoff['start_date']
+    if requires_handoff:
+        manifest = Path(handoff['directory']) / (business_date + '.json')
+    input_available = not requires_handoff or manifest.is_file()
     for role, spec in cfg['roles'].items():
         try:
-            batch = ingest(cfg, state, business_date, backend if isinstance(backend, LarkAdapter) else None,
-                           manifest, role=role)
+            if input_available:
+                batch = ingest(cfg, state, business_date, backend if isinstance(backend, LarkAdapter) else None,
+                               manifest, role=role)
+            else:
+                batch = {'business_date': business_date, 'status': 'waiting_input', 'readiness': 'observing',
+                         'items': [], 'sources': [], 'issues': [{'role': role, 'reason': 'waiting_for_codex_delivery'}]}
         except (ResearchError, OSError, ValueError) as exc:
             batch = {'business_date': business_date, 'status': 'waiting_input', 'readiness': 'invalid',
                      'items': [], 'sources': [], 'issues': [{'role': role, 'reason': 'invalid_input', 'detail': str(exc)}]}
         if mode == 'validate':
             # A broken source must not suppress the other tables' comparisons.
             roles[role] = validation.execute({**cfg, 'roles': {role: spec}}, state, batch, backend)
+        elif not input_available:
+            roles[role] = {'status': 'waiting_input', 'business_date': business_date, 'readiness': 'observing',
+                           'results': [], 'issues': batch['issues']}
         elif not batch.get('batch_id'):
             roles[role] = {'status': 'partial', 'business_date': business_date, 'readiness': 'invalid',
                            'results': [], 'issues': batch['issues']}

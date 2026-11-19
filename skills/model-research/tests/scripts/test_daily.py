@@ -1,4 +1,5 @@
 from copy import deepcopy
+import hashlib
 from unittest.mock import patch
 
 from support import Workspace, case
@@ -127,3 +128,29 @@ class DailyTests(Workspace):
         self.assertEqual(result['status'], 'completed')
         self.assertEqual(result['roles']['artifacts']['status'], 'skipped')
         self.assertEqual(result['roles']['models']['status'], 'completed')
+
+    @case('integration', 'daily -> Codex handoff -> zero-row input', ('delivery', 'readiness'))
+    def test_handoff_blocks_unowned_input_and_accepts_verified_empty_day(self):
+        day = '2026-11-13'
+        self.config(lambda cfg: cfg.update(input_handoff={'start_date': day, 'directory': 'handoff'}))
+        before = self.remote()
+        result = daily.execute(self.cfg, self.state, self.backend, day, 'apply')
+        self.assertEqual(result['roles']['channels']['status'], 'waiting_input')
+        self.assertEqual(result['issues'][0]['reason'], 'waiting_for_codex_delivery')
+        self.assertEqual(self.remote(), before)
+        path = self.root / 'incoming' / ('channels_' + day + '.csv')
+        path.write_bytes(path.read_bytes().splitlines(keepends=True)[0])
+        marker = self.root / 'handoff' / (day + '.json')
+        manifest = {'business_date': day, 'complete': True,
+                    'files': {'channels': {'name': path.name, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+                                           'allow_empty': True}}}
+        write_json(marker, manifest)
+        result = daily.execute(self.cfg, self.state, self.backend, day, 'apply')
+        self.assertEqual(result['roles']['channels']['status'], 'completed')
+        self.assertEqual(result['readiness'], 'producer_confirmed')
+        self.assertEqual(result['operations'], 0)
+        self.assertEqual(self.remote(), before)
+        path.write_bytes(path.read_bytes() + b'changed after readback')
+        result = daily.execute(self.cfg, self.state, self.backend, day, 'apply')
+        self.assertEqual(result['roles']['channels']['readiness'], 'invalid')
+        self.assertEqual(self.remote(), before)

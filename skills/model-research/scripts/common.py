@@ -10,7 +10,7 @@ import signal
 import subprocess
 import tempfile
 import threading
-from datetime import datetime
+from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
 
@@ -105,6 +105,12 @@ def load_config(path):
         interval = readiness.get('min_interval_seconds')
         if readiness.get('strategy') != 'stable_observations' or isinstance(interval, bool) or not isinstance(interval, (int, float)) or not 60 <= interval <= 3600:
             raise ResearchError('stable_observations requires min_interval_seconds between 60 and 3600')
+    handoff = cfg.get('input_handoff')
+    if handoff is not None:
+        if not isinstance(handoff, dict) or not handoff.get('directory') or not handoff.get('start_date'):
+            raise ResearchError('input_handoff requires directory and start_date')
+        handoff['start_date'] = date.fromisoformat(handoff['start_date']).isoformat()
+        handoff['directory'] = str((path.parent / handoff['directory']).resolve())
     state = (path.parent / cfg['state_dir']).resolve()
     checkout = Path(__file__).resolve().parents[3]
     if state.is_relative_to(checkout):

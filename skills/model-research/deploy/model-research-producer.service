@@ -1,0 +1,17 @@
+[Unit]
+Description=Produce the Codex model research daily delivery
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=modelresearch
+Group=modelresearch
+WorkingDirectory=/srv/model-research/producer
+Environment=PATH=/home/modelresearch/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONUNBUFFERED=1
+UMask=0077
+ExecStart=/usr/bin/python3 /srv/model-research/producer/current/skills/model-research/scripts/daily_producer.py --config /srv/model-research/csv/project.json --score-config /srv/model-research/scores/project.json --state /srv/model-research/producer/state
+TimeoutStartSec=45min
+TimeoutStopSec=30
+KillMode=control-group
