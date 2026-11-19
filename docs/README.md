@@ -1,5 +1,6 @@
 # 当前文档导航
 
+- [Codex 模型日报完整工作流程](Codex模型日报完整工作流程.md)
 - [架构与流程](<架构设计 Architecture Design 模型调研自动化.md>)
 - [代码结构](<代码结构设计 Code Structure Design 模型调研自动化.md>)
 - [边界与后续工作](<开发计划 Development Plan 模型调研自动化.md>)
