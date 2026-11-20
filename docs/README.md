@@ -31,3 +31,5 @@ Agent 工作时留下的说明和经过。不代替 [Schema](spec/schema.md)。
 - [运行记录](<records/run-record/2026-11-18 各表独立同步与评分依赖.md>) 目录按日期存放当次验收
 
 使用与部署见 [技能说明](../skills/model-research/README.md) 和 [服务器部署](../skills/model-research/references/server-deployment.md)。
+
+- [dev 工程经验归档](<开发记录 Development Record/2026-11-20 项目工程经验归档-dev.md>)
