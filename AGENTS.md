@@ -32,7 +32,6 @@
 ## 按任务读取的规范
 
 - [通用调研规范](https://dreamsoul.feishu.cn/docx/YcWIdE4INoLqoLxR5O8cbl7hnTf)：技术机制、方案比较与证据。
-- [GitHub 文档规范](https://dreamsoul.feishu.cn/docx/V3uPd2zg0onhaExj2FYcAUIlnjf)：仓库 Markdown。
 - [代码规范](https://dreamsoul.feishu.cn/docx/FKrsdHO9bolq4YxV2KAcosghnme)、[测试规范](https://dreamsoul.feishu.cn/docx/KE4IdW6EWoKdvExSkdvcjTJFnsf)：涉及实现或测试时读取。
 - [协作规范](https://dreamsoul.feishu.cn/docx/WihCdOtlqoeYjaxrpeXckFomnCh)：涉及团队提交与 PR 时读取。
 - [文献调研规范](https://dreamsoul.feishu.cn/docx/QKXhdAW2doZCvUxHSoFcpT0Mn5e)、[研究计划规范](https://dreamsoul.feishu.cn/docx/POdQdHYeqo7ujpxmJH1ctOMPn1g)：论文与科学研究任务按需读取，不将工程计划当研究计划。
@@ -45,7 +44,7 @@
 
 ## 文档、作业与发布
 
-- 默认文档规范及场景偏好从 USER.md 读取，结合项目已确认的约定与对应专项内容规范。文档名称准确反映内容，源码与配置按自身规范
+- 默认文档规范及场景偏好从 USER.md 读取，结合项目已确认的约定与对应专项内容规范。首次接入提供 [通用文档规范](https://dreamsoul.feishu.cn/docx/UWJ0dWNHzohVkaxUYNdchviznqt) 供本人确认或替换，保留已有选择；采用该规范时按发布平台读取飞书或 GitHub 专用要求。文档名称准确反映内容，源码与配置按自身规范
 - 长时后台作业记录作业标识、日志和可用的检查点位置。收到暂停或收尾要求时，按项目支持的方式保存进度并核实作业状态。恢复前先核对原作业和实际进度，再决定接续或重启
 - 采用开发分支向主分支发布时，提交发布 PR 前先核对开发分支已包含主分支的最新改动。
 - 研究项目形成阶段性结论时，放入 `docs/研究记录 Research Record/`，按「日期 主题.md」命名，由文档索引导航。每篇先回答核心研究问题，再说明已验证条件、尚待验证的问题和证据来源。实验过程与原始输出链接到运行记录，实现细节链接到开发记录。多批实验需要形成综合判断时，可另设 `docs/研究报告 Research Report/`，并链接对应研究记录。
@@ -60,6 +59,6 @@
 
 ## 飞书
 - 飞书内容编辑与上传：通过总索引定位相应使用及上传规范，读取对应技能与工具用法，再处理实际目标
-- 发布到飞书时按 [飞书文档规范](https://dreamsoul.feishu.cn/docx/DdmxdrNvBo9AMXxkAYmc4EJ6nwe) 适配正文与原生引用
+- 发布到飞书时按所选规范的平台要求适配正文与原生引用；采用 [通用文档规范](https://dreamsoul.feishu.cn/docx/UWJ0dWNHzohVkaxUYNdchviznqt) 时读取“飞书专用要求”
 - 飞书任务使用对应技能和 `lark-cli`，先确认用法，代表用户访问时显式指定 `--as user` 并核对实际身份。认证异常先用 `lark-cli auth status --json --verify` 核对既有登录，区分运行环境、登录和资源权限，再决定是否需要重新登录，不静默切换为机器人或浏览器
 - 使用 `lark-cli` 读取文档资源、初始化草稿等会落盘的命令时，先创建项目约定的任务临时目录，并将命令工作目录设到该处；支持输出目录参数时显式指定。后续命令从同一目录解析相对路径和 `@./...`，收尾时核对资源与草稿的实际位置
