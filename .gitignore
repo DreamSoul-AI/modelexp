@@ -134,5 +134,6 @@ project.local.yml
 # Ship this skill's executable sources and regression tests.
 !skills/model-research/scripts/
 !skills/model-research/tests/scripts/
-
+/.tmp/
 /.shared/
+/.workspace/local/
