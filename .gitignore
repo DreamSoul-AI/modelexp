@@ -135,3 +135,4 @@ project.local.yml
 !skills/model-research/scripts/
 !skills/model-research/tests/scripts/
 
+/.shared/
