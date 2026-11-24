@@ -136,4 +136,3 @@ project.local.yml
 !skills/model-research/tests/scripts/
 /.tmp/
 /.shared/
-/.workspace/local/
